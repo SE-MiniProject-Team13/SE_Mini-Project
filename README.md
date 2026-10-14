@@ -19,7 +19,7 @@ Traffic Management Simulation (TMS) is a C/C++ console-based project that simula
 - Concepts: Simulation, Randomized Vehicle Generation, Traffic Signal Control
 
 ## Project Scope
-The project focuses on a single four-way intersection with simulated traffic. It does not include real-time traffic data, pedestrian crossings, or control of physical traffic signals.
+The project focuses on a single four-way intersection with simulated traffic. It does not include real-time traffic data, pedestrian crossings, or control of physical traffic signals. It is developed to deal with the issue of all vehicles intersecting at the junction.
 
 ## Learning Outcomes
 This project demonstrates the practical application of data structures, modular software design, simulation logic, and basic performance analysis.
