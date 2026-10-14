@@ -25,7 +25,7 @@ The project focuses on a single four-way intersection with simulated traffic. It
 This project demonstrates the practical application of data structures, modular software design, simulation logic, and basic performance analysis.
 
 ## Team
-Developed as a Software Engineering mini-project at PES University.
+Developed as a Software Engineering mini-project.
 
 - Patangi Naveen
 - Pranav SP
