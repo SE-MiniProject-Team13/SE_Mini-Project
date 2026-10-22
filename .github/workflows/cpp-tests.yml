@@ -1,0 +1,44 @@
+name: C++ Tests
+
+'on':
+  push:
+    branches:
+      - feature/signal-control
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Build & Test (C++11)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build and Run Vehicle Queue Tests
+        run: |
+          g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
+            src/vehicle_queue.cpp tests/test_vehicle_queue.cpp \
+            -o test_vehicle_queue
+          ./test_vehicle_queue
+
+      - name: Build and Run Signal Controller Tests
+        run: |
+          g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
+            src/signal_controller.cpp src/vehicle_queue.cpp tests/test_signal_controller.cpp \
+            -o test_signal_controller
+          ./test_signal_controller
+
+      - name: Build and Run Tests under Sanitizers (ASan + UBSan)
+        run: |
+          g++ -std=c++11 -Wall -Wextra -pedantic -fsanitize=address,undefined -g -Iinclude \
+            src/vehicle_queue.cpp tests/test_vehicle_queue.cpp \
+            -o test_vehicle_queue_asan
+          ./test_vehicle_queue_asan
+
+          g++ -std=c++11 -Wall -Wextra -pedantic -fsanitize=address,undefined -g -Iinclude \
+            src/signal_controller.cpp src/vehicle_queue.cpp tests/test_signal_controller.cpp \
+            -o test_signal_controller_asan
+          ./test_signal_controller_asan
