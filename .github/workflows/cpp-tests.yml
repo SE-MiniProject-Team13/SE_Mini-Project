@@ -31,6 +31,13 @@ jobs:
             -o test_signal_controller
           ./test_signal_controller
 
+      - name: Build and Run Configuration Tests
+        run: |
+          g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
+            src/config.cpp tests/test_config.cpp \
+            -o test_config
+          ./test_config
+
       - name: Build and Run Tests under Sanitizers (ASan + UBSan)
         run: |
           g++ -std=c++11 -Wall -Wextra -pedantic -fsanitize=address,undefined -g -Iinclude \
