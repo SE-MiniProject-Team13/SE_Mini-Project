@@ -43,7 +43,10 @@ void test4_rejectInsertionWhenFull() {
     assert(queue.enqueue(createVehicle()));
     assert(queue.isFull());
 
-    assert(!queue.enqueue(createVehicle()));
+    Vehicle* rejected = createVehicle();
+    assert(!queue.enqueue(rejected));
+    delete rejected;
+
     assert(queue.size() == 1);
     assert(queue.getBlockedCount() == 1);
 }
@@ -53,7 +56,11 @@ void test5_capacityOfOne() {
 
     assert(queue.getCapacity() == 1);
     assert(queue.enqueue(createVehicle()));
-    assert(queue.dequeue() != nullptr);
+
+    Vehicle* removed = queue.dequeue();
+    assert(removed != nullptr);
+    delete removed;
+
     assert(queue.isEmpty());
 }
 
