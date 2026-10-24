@@ -3,6 +3,7 @@
 
 #include "vehicle.h"
 #include "vehicle_queue.h"
+#include "signal_mode.h"
 
 #include <cstddef>
 #include <string>
@@ -21,11 +22,6 @@ enum class LightColor {
     Green,
     Yellow,
     Red
-};
-
-enum class SignalMode {
-    Fixed,
-    Adaptive
 };
 
 enum class Phase {
