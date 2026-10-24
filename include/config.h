@@ -2,12 +2,9 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <string>
+#include "signal_mode.h"
 
-enum class SignalMode {
-    Fixed,
-    Adaptive
-};
+#include <string>
 
 struct Config {
     int durationTicks = 600;

@@ -5,3 +5,7 @@
 # Object files
 *.o
 *.obj
+
+# Generated simulation exports
+report.txt
+events.csv
