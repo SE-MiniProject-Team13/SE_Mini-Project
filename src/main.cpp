@@ -12,15 +12,11 @@ int readInteger(const std::string& prompt, int minimum, int maximum) {
     std::string line;
     while (true) {
         std::cout << prompt;
-        if (!std::getline(std::cin, line)) {
-            return 0;
-        }
+        if (!std::getline(std::cin, line)) return 0;
         std::istringstream input(line);
         int value = 0;
         char extra = '\0';
-        if ((input >> value) && !(input >> extra) && value >= minimum && value <= maximum) {
-            return value;
-        }
+        if ((input >> value) && !(input >> extra) && value >= minimum && value <= maximum) return value;
         std::cout << "Enter a whole number from " << minimum << " to " << maximum << ".\n";
     }
 }
@@ -49,9 +45,7 @@ int main() {
     while (true) {
         showMenu(config, *engine);
         const int choice = readInteger("Select an option: ", 0, 6);
-        if (!std::cin && std::cin.eof()) {
-            break;
-        }
+        if (!std::cin && std::cin.eof()) break;
 
         try {
             switch (choice) {
@@ -95,6 +89,5 @@ int main() {
             std::cout << "Simulation error: " << error.what() << '\n';
         }
     }
-
     return 0;
 }

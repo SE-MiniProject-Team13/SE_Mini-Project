@@ -4,6 +4,8 @@ name: C++ Tests
   push:
     branches:
       - feature/signal-control
+      - feature/emergency-priority
+      - feature/robustness-memory-safety
   pull_request:
     branches:
       - main
@@ -38,6 +40,14 @@ jobs:
             -o test_config
           ./test_config
 
+      - name: Build and Run Emergency Handler Tests
+        run: |
+          g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
+            src/emergency_handler.cpp src/signal_controller.cpp src/vehicle_queue.cpp \
+            tests/test_emergency_handler.cpp \
+            -o test_emergency_handler
+          ./test_emergency_handler
+
       - name: Build and Run Tests under Sanitizers (ASan + UBSan)
         run: |
           g++ -std=c++11 -Wall -Wextra -pedantic -fsanitize=address,undefined -g -Iinclude \
@@ -49,3 +59,9 @@ jobs:
             src/signal_controller.cpp src/vehicle_queue.cpp tests/test_signal_controller.cpp \
             -o test_signal_controller_asan
           ./test_signal_controller_asan
+
+          g++ -std=c++11 -Wall -Wextra -pedantic -fsanitize=address,undefined -g -Iinclude \
+            src/emergency_handler.cpp src/signal_controller.cpp src/vehicle_queue.cpp \
+            tests/test_emergency_handler.cpp \
+            -o test_emergency_handler_asan
+          ./test_emergency_handler_asan
