@@ -1,5 +1,6 @@
 
 #include "vehicle_queue.h"
+#include <stdexcept>
 
 VehicleQueue::VehicleQueue(std::size_t maxCapacity)
     : normalFront(nullptr),
@@ -9,7 +10,13 @@ VehicleQueue::VehicleQueue(std::size_t maxCapacity)
       currentSize(0),
       capacity(maxCapacity),
       blockedCount(0),
-      maxSize(0) {}
+      maxSize(0) {
+    if (maxCapacity == 0) {
+        throw std::invalid_argument(
+            "Queue capacity must be greater than zero"
+        );
+    }
+}
 
 VehicleQueue::~VehicleQueue() {
     clear();
