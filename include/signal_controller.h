@@ -107,6 +107,7 @@ private:
     Phase preemptedPhase;
     bool safetyViolationDetected;
     bool isFirstTick;
+    int ticksInCurrentState;
 
     void transitionToNextState(const QueueLengths& queueLengths);
 
@@ -150,6 +151,7 @@ public:
     // returns the upcoming phase preparing to receive green (All_Red_1 -> EW, All_Red_2 -> NS).
     Phase getActivePhase() const;
     int getTicksRemaining() const;
+    int getTicksInCurrentState() const;
     int getCycleCount() const;
     bool isPreemptionActive() const;
     Phase getPreemptedPhase() const;
