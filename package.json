@@ -1,0 +1,20 @@
+{
+  "name": "traffic-management-simulation-dashboard",
+  "private": true,
+  "workspaces": [
+    "web"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "node server/index.js",
+    "dev:web": "npm --prefix web run dev -- --host 127.0.0.1",
+    "test": "node --test server/test/*.test.js",
+    "build": "npm --prefix web run build"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

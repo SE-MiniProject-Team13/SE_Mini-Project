@@ -42,6 +42,7 @@ Build-And-Run "test_simulation" @("src/vehicle_queue.cpp", "src/signal_controlle
 Build-And-Run "test_emergency_preemption" @("src/vehicle_queue.cpp", "src/signal_controller.cpp", "src/simulation.cpp", "tests/test_emergency_preemption.cpp") $true
 Build-And-Run "test_final_requirements" @("src/vehicle_queue.cpp", "src/signal_controller.cpp", "src/simulation.cpp", "tests/test_final_requirements.cpp") $true
 Build-And-Run "test_signal_transition_safety" @("src/vehicle_queue.cpp", "src/signal_controller.cpp", "src/simulation.cpp", "tests/test_signal_transition_safety.cpp") $true
+Build-And-Run "test_simulation_analytics" @("src/vehicle_queue.cpp", "src/signal_controller.cpp", "src/simulation.cpp", "tests/test_simulation_analytics.cpp") $true
 Build-And-Run "test_randomized_safety" @("src/vehicle_queue.cpp", "src/signal_controller.cpp", "src/simulation.cpp", "tests/test_randomized_safety.cpp") $true
 
 Write-Host "`n=================================================" -ForegroundColor Green

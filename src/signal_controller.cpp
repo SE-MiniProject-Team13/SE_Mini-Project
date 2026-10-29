@@ -288,12 +288,24 @@ SignalStateRecord SignalController::getStateRecord() const {
 }
 
 bool SignalController::acceptPreemption(Phase phase) {
-    // SAD Section 4.3 interface hook: stores requested phase and marks preemption active.
-    // Full emergency vehicle priority and pre-emption sequencing (FR-27 to FR-33)
-    // are governed by the Emergency Handler under Issue #38 (FR-TMS-05).
+    const bool newRequest = !preemptionActive || preemptedPhase != phase;
     preemptedPhase = phase;
     preemptionActive = true;
-    return true;
+
+    if (!newRequest) {
+        return false;
+    }
+
+    const bool opposingGreen =
+        (currentState == SignalState::NS_Green && phase == Phase::EW) ||
+        (currentState == SignalState::EW_Green && phase == Phase::NS);
+
+    if (opposingGreen && ticksRemaining > 1) {
+        ticksRemaining = 1;
+        return true;
+    }
+
+    return false;
 }
 
 void SignalController::releasePreemption() {

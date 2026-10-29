@@ -45,14 +45,40 @@ struct SimulationStats {
     std::size_t blocked;
     std::size_t waiting;
     double averageWaitingTime;
+    std::size_t maximumWaitingTime;
+    std::size_t maximumQueueLength;
+    double throughput;
     std::size_t emergencyServed;
     double averageEmergencyWaitingTime;
+    std::size_t maximumEmergencyWaitingTime;
+    std::size_t preemptionCount;
+    bool vehicleCountInvariantPassed;
+    bool signalSafetyPassed;
     int elapsedTicks;
 
     SimulationStats()
         : generated(0), served(0), blocked(0), waiting(0),
-          averageWaitingTime(0.0), emergencyServed(0),
-          averageEmergencyWaitingTime(0.0), elapsedTicks(0) {}
+          averageWaitingTime(0.0), maximumWaitingTime(0),
+          maximumQueueLength(0), throughput(0.0), emergencyServed(0),
+          averageEmergencyWaitingTime(0.0), maximumEmergencyWaitingTime(0),
+          preemptionCount(0), vehicleCountInvariantPassed(true),
+          signalSafetyPassed(true), elapsedTicks(0) {}
+};
+
+struct SimulationEvent {
+    int tick;
+    int vehicleId;
+    std::string type;
+    Direction direction;
+    bool emergency;
+    int waitingTime;
+};
+
+struct SimulationSnapshot {
+    int tick;
+    SignalState signalState;
+    QueueLengths queues;
+    bool preemptionActive;
 };
 
 class TrafficSimulation {
@@ -76,6 +102,8 @@ public:
     std::size_t getQueueSize(Direction direction) const;
     bool checkVehicleCountInvariant() const;
     const std::vector<std::string>& getEventLog() const;
+    const std::vector<SimulationEvent>& getAnalyticsEvents() const;
+    const std::vector<SimulationSnapshot>& getAnalyticsHistory() const;
 
 private:
     SimulationConfig config;
@@ -93,7 +121,13 @@ private:
     long long totalWaitingTime;
     long long totalEmergencyWaitingTime;
     std::size_t emergencyServedCount;
+    std::size_t maximumWaitingTime;
+    std::size_t maximumEmergencyWaitingTime;
+    std::size_t maximumQueueLength;
+    std::size_t preemptionCount;
     std::vector<std::string> eventLog;
+    std::vector<SimulationEvent> analyticsEvents;
+    std::vector<SimulationSnapshot> analyticsHistory;
     bool previousPreemptionActive;
     int previousPreemptionPhase;
 
@@ -102,6 +136,8 @@ private:
     int phaseFor(Direction direction) const;
     bool emergencyWaitingForPhase(int phase) const;
     void detectAndRequestEmergency();
+    void recordSnapshot();
+    void recordAnalyticsEvent(const char* type, const Vehicle& vehicle, int waitingTime);
     void dischargeGreenApproaches();
     void recordPreemptionEvents();
     void recordSafetyFailure();

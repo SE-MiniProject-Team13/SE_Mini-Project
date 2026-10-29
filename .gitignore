@@ -5,3 +5,9 @@
 # Object files
 *.o
 *.obj
+
+# Web dashboard dependencies and builds
+node_modules/
+web/node_modules/
+web/dist/
+*.tsbuildinfo
