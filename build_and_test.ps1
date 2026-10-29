@@ -33,7 +33,7 @@ function Build-And-Run([string]$name, [string[]]$sources, [bool]$run = $true) {
 }
 
 # 1. Build Main Application
-Build-And-Run "tms" @("src/vehicle_queue.cpp", "src/signal_controller.cpp", "src/simulation.cpp", "src/main.cpp") $false
+Build-And-Run "tms" @("src/vehicle_queue.cpp", "src/signal_controller.cpp", "src/simulation.cpp", "src/signal_comparison.cpp", "src/console_menu.cpp", "src/main.cpp") $false
 
 # 2. Build and Run All Test Suites
 Build-And-Run "test_vehicle_queue" @("src/vehicle_queue.cpp", "tests/test_vehicle_queue.cpp") $true
@@ -44,6 +44,7 @@ Build-And-Run "test_final_requirements" @("src/vehicle_queue.cpp", "src/signal_c
 Build-And-Run "test_signal_transition_safety" @("src/vehicle_queue.cpp", "src/signal_controller.cpp", "src/simulation.cpp", "tests/test_signal_transition_safety.cpp") $true
 Build-And-Run "test_simulation_analytics" @("src/vehicle_queue.cpp", "src/signal_controller.cpp", "src/simulation.cpp", "tests/test_simulation_analytics.cpp") $true
 Build-And-Run "test_randomized_safety" @("src/vehicle_queue.cpp", "src/signal_controller.cpp", "src/simulation.cpp", "tests/test_randomized_safety.cpp") $true
+Build-And-Run "test_signal_control_comparison" @("src/vehicle_queue.cpp", "src/signal_controller.cpp", "src/simulation.cpp", "src/signal_comparison.cpp", "src/console_menu.cpp", "tests/test_signal_control_comparison.cpp") $true
 
 Write-Host "`n=================================================" -ForegroundColor Green
 Write-Host "   ALL BUILDS AND TESTS PASSED SUCCESSFULLY!     " -ForegroundColor Green

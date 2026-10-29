@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -123,8 +123,11 @@ function App() {
   const [seed, setSeed] = useState(42);
   const [isRunning, setIsRunning] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoadingSelection, setIsLoadingSelection] = useState(false);
+  const [selectionFailed, setSelectionFailed] = useState(false);
   const [graphsGenerated, setGraphsGenerated] = useState(false);
   const [error, setError] = useState("");
+  const selectionRequestId = useRef(0);
 
   const loadRuns = async () => {
     const records = await requestJson<RunRecord[]>("/api/simulations");
@@ -137,39 +140,66 @@ function App() {
 
   const selectRun = async (selectedId: string) => {
     if (!selectedId) {
+      selectionRequestId.current += 1;
       setRunId("");
       setRun(null);
+      setIsLoadingSelection(false);
+      setSelectionFailed(false);
       setGraphsGenerated(false);
+      setError("");
       return;
     }
+    const requestId = ++selectionRequestId.current;
     setError("");
+    setRun(null);
     setGraphsGenerated(false);
+    setSelectionFailed(false);
     setRunId(selectedId);
-    setIsRefreshing(true);
+    setIsLoadingSelection(true);
     try {
       const selectedRun = await requestJson<RunRecord>(
         `/api/simulations/${selectedId}`
       );
-      setRun(selectedRun);
+      if (requestId === selectionRequestId.current) {
+        setRun(selectedRun);
+      }
     } catch (selectionError) {
-      setError((selectionError as Error).message);
+      if (requestId === selectionRequestId.current) {
+        setRun(null);
+        setSelectionFailed(true);
+        setError((selectionError as Error).message);
+      }
     } finally {
-      setIsRefreshing(false);
+      if (requestId === selectionRequestId.current) {
+        setIsLoadingSelection(false);
+      }
     }
   };
 
   const refreshSelectedRun = async () => {
     if (!runId) return;
+    const requestedRunId = runId;
+    const requestId = selectionRequestId.current;
     setError("");
     setIsRefreshing(true);
     try {
       const refreshed = await requestJson<RunRecord>(
-        `/api/simulations/${runId}`
+        `/api/simulations/${requestedRunId}`
       );
-      setRun(refreshed);
+      if (
+        requestId === selectionRequestId.current &&
+        requestedRunId === runId
+      ) {
+        setRun(refreshed);
+      }
       await loadRuns();
     } catch (refreshError) {
-      setError((refreshError as Error).message);
+      if (
+        requestId === selectionRequestId.current &&
+        requestedRunId === runId
+      ) {
+        setError((refreshError as Error).message);
+      }
     } finally {
       setIsRefreshing(false);
     }
@@ -177,9 +207,12 @@ function App() {
 
   const startRun = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    selectionRequestId.current += 1;
     setError("");
     setRun(null);
     setRunId("");
+    setIsLoadingSelection(false);
+    setSelectionFailed(false);
     setGraphsGenerated(false);
     setIsRunning(true);
     try {
@@ -267,18 +300,26 @@ function App() {
     if (!result) return [];
     const byTick = new Map<
       number,
-      { arrivals: number; served: number; preemptions: number }
+      { accepted: number; rejected: number; served: number; preemptions: number }
     >();
     for (const point of result.timeSeries) {
-      byTick.set(point.tick, { arrivals: 0, served: 0, preemptions: 0 });
+      byTick.set(point.tick, {
+        accepted: 0,
+        rejected: 0,
+        served: 0,
+        preemptions: 0,
+      });
     }
     for (const item of result.events) {
-      if (item.type === "PREEMPTION") {
+      if (item.emergency && item.type === "PREEMPTION") {
         const point = byTick.get(item.tick);
         if (point) point.preemptions += 1;
       } else if (item.emergency && item.type === "ARRIVAL") {
         const point = byTick.get(item.tick);
-        if (point) point.arrivals += 1;
+        if (point) point.accepted += 1;
+      } else if (item.emergency && item.type === "REJECTION") {
+        const point = byTick.get(item.tick);
+        if (point) point.rejected += 1;
       } else if (item.emergency && item.type === "DEPARTURE") {
         const point = byTick.get(item.tick);
         if (point) point.served += 1;
@@ -288,6 +329,17 @@ function App() {
       tick,
       ...values,
     }));
+  }, [result]);
+  const emergencyTotals = useMemo(() => {
+    const totals = { accepted: 0, rejected: 0, served: 0, preemptions: 0 };
+    for (const item of result?.events ?? []) {
+      if (!item.emergency) continue;
+      if (item.type === "ARRIVAL") totals.accepted += 1;
+      else if (item.type === "REJECTION") totals.rejected += 1;
+      else if (item.type === "DEPARTURE") totals.served += 1;
+      else if (item.type === "PREEMPTION") totals.preemptions += 1;
+    }
+    return totals;
   }, [result]);
   const emergencyWaits =
     result?.events.filter(
@@ -461,15 +513,30 @@ function App() {
 
         {!result ? (
           <section className="empty-state panel">
-            <div className="empty-illustration" aria-hidden="true">
-              <span>●</span>
-              <span>●</span>
-              <span>●</span>
-            </div>
-            <h2>{run?.status === "failed" ? "Run did not complete" : "Your analytics will appear here"}</h2>
+            {isLoadingSelection ? (
+              <span className="spinner" role="status" aria-label="Loading selected run" />
+            ) : (
+              <div className="empty-illustration" aria-hidden="true">
+                <span>●</span>
+                <span>●</span>
+                <span>●</span>
+              </div>
+            )}
+            <h2>
+              {selectionFailed
+                ? "Could not load selected run"
+                : isLoadingSelection
+                  ? "Loading selected run…"
+                  : run?.status === "failed"
+                    ? "Run did not complete"
+                    : "Your analytics will appear here"}
+            </h2>
             <p>
-              Configure a run and start the native traffic simulation. Summary
-              metrics and recorded data charts will appear when it completes.
+              {selectionFailed
+                ? "This run's results were not loaded. Select another run or retry the selection."
+                : isLoadingSelection
+                  ? "The selected run's summary and chart data are being fetched."
+                  : "Configure a run and start the native traffic simulation. Summary metrics and recorded data charts will appear when it completes."}
             </p>
           </section>
         ) : (
@@ -606,7 +673,11 @@ function App() {
                     </ResponsiveContainer>
                   </ChartPanel>
 
-                  <ChartPanel title="Emergency performance" subtitle="Emergency arrivals, services, and executed pre-emptions by tick">
+                  <ChartPanel
+                    title="Emergency performance"
+                    subtitle="Accepted, rejected, and served emergency vehicles plus executed pre-emptions by tick"
+                    detail={`Arrival attempts: ${emergencyTotals.accepted + emergencyTotals.rejected} · accepted: ${emergencyTotals.accepted} · rejected: ${emergencyTotals.rejected} · served: ${emergencyTotals.served} · pre-emptions: ${emergencyTotals.preemptions}`}
+                  >
                     <ResponsiveContainer width="100%" height="100%">
                       <ComposedChart data={emergencyData} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
                         <CartesianGrid stroke="#e9eef4" vertical={false} />
@@ -614,9 +685,10 @@ function App() {
                         <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
                         <Tooltip labelFormatter={(value) => `Tick ${value}`} />
                         <Legend />
-                        <Bar dataKey="arrivals" name="Emergency arrivals" fill="#ed9d48" />
+                        <Bar dataKey="accepted" name="Accepted emergency arrivals" fill="#ed9d48" />
+                        <Bar dataKey="rejected" name="Rejected emergency vehicles" fill="#cc5961" />
                         <Bar dataKey="served" name="Emergency served" fill="#21a67a" />
-                        <Line type="monotone" dataKey="preemptions" name="Executed pre-emptions" stroke="#cc5961" strokeWidth={2} dot={false} />
+                        <Line type="monotone" dataKey="preemptions" name="Executed pre-emptions" stroke="#6b4ca5" strokeWidth={2} dot={false} />
                       </ComposedChart>
                     </ResponsiveContainer>
                   </ChartPanel>
@@ -730,10 +802,12 @@ function ValidationBadge({
 function ChartPanel({
   title,
   subtitle,
+  detail,
   children,
 }: {
   title: string;
   subtitle: string;
+  detail?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -741,6 +815,7 @@ function ChartPanel({
       <div className="chart-title">
         <h3>{title}</h3>
         <p>{subtitle}</p>
+        {detail && <p className="chart-detail">{detail}</p>}
       </div>
       <div className="chart-area">{children}</div>
     </section>

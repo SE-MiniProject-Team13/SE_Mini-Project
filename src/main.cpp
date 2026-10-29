@@ -1,4 +1,5 @@
 #include "simulation.h"
+#include "console_menu.h"
 
 #include <cstdlib>
 #include <iomanip>
@@ -11,10 +12,12 @@ void printUsage(const char* program) {
     std::cout
         << "Traffic Management Simulation (TMS) - Sprint 1\n"
         << "Usage: " << program << " [ticks] [adaptive|fixed] [--verbose]\n\n"
+        << "       " << program << " --menu\n\n"
         << "Examples:\n"
         << "  " << program << "\n"
         << "  " << program << " 100 adaptive\n"
         << "  " << program << " 50 fixed --verbose\n\n"
+        << "  " << program << " --menu\n\n"
         << "Default run executes a deterministic demonstration showing signal cycling,\n"
         << "queue management, emergency vehicle handling, and safety invariants.\n";
 }
@@ -36,6 +39,10 @@ void printStateSnapshot(const TrafficSimulation& simulation) {
 } // namespace
 
 int main(int argc, char* argv[]) {
+    if (argc == 2 && std::string(argv[1]) == "--menu") {
+        return runConsoleMenu(std::cin, std::cout);
+    }
+
     int ticks = 30; // 30 ticks covers full 6-state cycle for demo
     bool adaptive = true;
     bool verbose = false;

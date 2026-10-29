@@ -705,6 +705,12 @@ h1 {
   font-size: 10px;
 }
 
+.chart-title .chart-detail {
+  margin-top: 7px;
+  color: #526882;
+  font-weight: 700;
+}
+
 .chart-area {
   width: 100%;
   height: 236px;

@@ -97,6 +97,54 @@ static void testMaximumQueueAcrossApproachesAndSignalHistory() {
     assert(history[4].signalState == SignalState::EW_Green);
 }
 
+static void testEmergencyArrivalAttemptAccounting() {
+    SimulationConfig config(1, 4, 1, 1, 0, false, 1, 8, 1);
+    TrafficSimulation simulation(config);
+
+    assert(simulation.addVehicle(Direction::North, true));
+    assert(!simulation.addVehicle(Direction::North, true));
+
+    const SimulationStats stats = simulation.getStats();
+    assert(stats.generated == 2);
+    assert(stats.blocked == 1);
+    assert(stats.served == 0);
+    assert(stats.waiting == 1);
+    assert(stats.preemptionCount == 0);
+
+    std::size_t emergencyAttempts = 0;
+    std::size_t acceptedArrivals = 0;
+    std::size_t rejectedVehicles = 0;
+    std::size_t servedEmergencies = 0;
+    std::size_t preemptions = 0;
+    const std::vector<SimulationEvent>& events =
+        simulation.getAnalyticsEvents();
+    for (std::size_t i = 0; i < events.size(); ++i) {
+        const SimulationEvent& event = events[i];
+        if (event.emergency &&
+            (event.type == "ARRIVAL" || event.type == "REJECTION")) {
+            ++emergencyAttempts;
+        }
+        if (event.emergency && event.type == "ARRIVAL") {
+            ++acceptedArrivals;
+        }
+        if (event.emergency && event.type == "REJECTION") {
+            ++rejectedVehicles;
+        }
+        if (event.emergency && event.type == "DEPARTURE") {
+            ++servedEmergencies;
+        }
+        if (event.type == "PREEMPTION") {
+            ++preemptions;
+        }
+    }
+
+    assert(emergencyAttempts == 2);
+    assert(acceptedArrivals == 1);
+    assert(rejectedVehicles == 1);
+    assert(servedEmergencies == 0);
+    assert(preemptions == 0);
+}
+
 static void testEmptyRunAndNoServedMetrics() {
     SimulationConfig config(2, 4, 1, 1, 0, false, 1, 8, 1);
     TrafficSimulation simulation(config);
@@ -117,6 +165,7 @@ int main() {
     testSummaryAndQueueHistory();
     testEmergencyAndActualPreemption();
     testMaximumQueueAcrossApproachesAndSignalHistory();
+    testEmergencyArrivalAttemptAccounting();
     testEmptyRunAndNoServedMetrics();
     std::cout << "Simulation analytics tests passed.\n";
     return 0;

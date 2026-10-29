@@ -15,7 +15,7 @@ Run these commands from the repository root in PowerShell:
 
 ```powershell
 # Build the main simulation application
-g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/vehicle_queue.cpp src/signal_controller.cpp src/simulation.cpp src/main.cpp -o tms.exe
+g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/vehicle_queue.cpp src/signal_controller.cpp src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp src/main.cpp -o tms.exe
 ```
 
 Alternatively, use the automated build and test script:
@@ -37,7 +37,15 @@ powershell -ExecutionPolicy Bypass -File .\build_and_test.ps1
 
 # Run with verbose tick logging
 .\tms.exe 50 fixed --verbose
+
+# Interactive console menu, including a Fixed vs Adaptive comparison (option 5)
+.\tms.exe --menu
 ```
+
+The comparison menu asks for a duration and seed, generates one deterministic
+arrival schedule, and runs separate Fixed and Adaptive simulations against that
+same schedule. The default demonstration and existing command-line modes remain
+available unchanged.
 
 ## Build and Run Tests
 
