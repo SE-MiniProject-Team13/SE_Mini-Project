@@ -3,6 +3,7 @@
 
 #include "vehicle.h"
 #include "vehicle_queue.h"
+#include "signal_mode.h"
 
 #include <cstddef>
 #include <string>
@@ -21,11 +22,6 @@ enum class LightColor {
     Green,
     Yellow,
     Red
-};
-
-enum class SignalMode {
-    Fixed,
-    Adaptive
 };
 
 enum class Phase {
@@ -107,6 +103,7 @@ private:
     Phase preemptedPhase;
     bool safetyViolationDetected;
     bool isFirstTick;
+    int ticksInCurrentState;
 
     void transitionToNextState(const QueueLengths& queueLengths);
 
@@ -150,6 +147,7 @@ public:
     // returns the upcoming phase preparing to receive green (All_Red_1 -> EW, All_Red_2 -> NS).
     Phase getActivePhase() const;
     int getTicksRemaining() const;
+    int getTicksInCurrentState() const;
     int getCycleCount() const;
     bool isPreemptionActive() const;
     Phase getPreemptedPhase() const;

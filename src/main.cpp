@@ -1,9 +1,12 @@
 #include "simulation.h"
 #include "console_menu.h"
+#include "config.h"
+#include "simulation_engine.h"
 
-#include <cstdlib>
-#include <iomanip>
+#include <exception>
 #include <iostream>
+#include <memory>
+#include <sstream>
 #include <string>
 
 namespace {
@@ -20,20 +23,31 @@ void printUsage(const char* program) {
         << "  " << program << " --menu\n\n"
         << "Default run executes a deterministic demonstration showing signal cycling,\n"
         << "queue management, emergency vehicle handling, and safety invariants.\n";
+int readInteger(const std::string& prompt, int minimum, int maximum) {
+    std::string line;
+    while (true) {
+        std::cout << prompt;
+        if (!std::getline(std::cin, line)) return 0;
+        std::istringstream input(line);
+        int value = 0;
+        char extra = '\0';
+        if ((input >> value) && !(input >> extra) && value >= minimum && value <= maximum) return value;
+        std::cout << "Enter a whole number from " << minimum << " to " << maximum << ".\n";
+    }
 }
 
-void printStateSnapshot(const TrafficSimulation& simulation) {
-    const SignalController& sc = simulation.getSignalController();
-    std::cout << "  Signal: " << SignalController::stateToString(sc.getState())
-              << " (" << sc.getTicksRemaining() << " ticks left)"
-              << " | N:" << SignalController::colorToString(sc.getLightColor(Direction::North))
-              << " S:" << SignalController::colorToString(sc.getLightColor(Direction::South))
-              << " E:" << SignalController::colorToString(sc.getLightColor(Direction::East))
-              << " W:" << SignalController::colorToString(sc.getLightColor(Direction::West))
-              << " | Queues: [N:" << simulation.getQueueSize(Direction::North)
-              << " S:" << simulation.getQueueSize(Direction::South)
-              << " E:" << simulation.getQueueSize(Direction::East)
-              << " W:" << simulation.getQueueSize(Direction::West) << "]\n";
+void showMenu(const Config& config, const SimulationEngine& engine) {
+    std::cout << "\n=== Traffic Management Simulation ===\n"
+              << "Tick " << engine.getCurrentTick() << " / " << config.durationTicks
+              << " | mode: " << (config.signalMode == SignalMode::Fixed ? "Fixed" : "Adaptive") << "\n"
+              << "1. Run continuously to configured duration\n"
+              << "2. Step a chosen number of ticks (1-100)\n"
+              << "3. Quiet run to configured duration\n"
+              << "4. Configure a new simulation\n"
+              << "5. Reset current simulation\n"
+              << "6. Export report.txt and events.csv\n"
+              << "0. Exit\n";
+}
 }
 
 } // namespace
@@ -160,45 +174,59 @@ int main(int argc, char* argv[]) {
                 if (stateChanged) {
                     std::cout << "SIGNAL TRANSITION -> "
                               << SignalController::stateToString(currentState) << "\n";
+int main() {
+    Config config;
+    std::unique_ptr<SimulationEngine> engine(new SimulationEngine(config));
+
+    std::cout << "Traffic Management Simulation\n"
+              << "Press 4 from the menu to change the default configuration.\n";
+
+    while (true) {
+        showMenu(config, *engine);
+        const int choice = readInteger("Select an option: ", 0, 6);
+        if (!std::cin && std::cin.eof()) break;
+
+        try {
+            switch (choice) {
+                case 1:
+                    engine->runConfiguredDuration(std::cout, false);
+                    break;
+                case 2: {
+                    const int ticks = readInteger("How many ticks (1-100)? ", 1, 100);
+                    if (std::cin.eof()) break;
+                    engine->advanceTicks(ticks, std::cout, false);
+                    break;
                 }
-                printStateSnapshot(simulation);
+                case 3:
+                    engine->runConfiguredDuration(std::cout, true);
+                    break;
+                case 4:
+                    configureSimulation(config);
+                    engine.reset(new SimulationEngine(config));
+                    std::cout << "New configuration applied; simulation restarted at tick 0.\n";
+                    break;
+                case 5:
+                    engine->reset();
+                    std::cout << "Simulation reset. The configured seed will replay the same arrivals.\n";
+                    break;
+                case 6: {
+                    std::string reportError;
+                    std::string csvError;
+                    const bool reportWritten = engine->exportReport("report.txt", reportError);
+                    const bool csvWritten = engine->exportEventsCsv("events.csv", csvError);
+                    if (reportWritten) std::cout << "Saved report.txt\n";
+                    else std::cout << "Report export failed: " << reportError << '\n';
+                    if (csvWritten) std::cout << "Saved events.csv\n";
+                    else std::cout << "Event export failed: " << csvError << '\n';
+                    break;
+                }
+                case 0:
+                    std::cout << "Goodbye.\n";
+                    return 0;
             }
+        } catch (const std::exception& error) {
+            std::cout << "Simulation error: " << error.what() << '\n';
         }
-
-        previousState = currentState;
     }
-
-    const SimulationStats stats = simulation.getStats();
-
-    std::cout << "\n===============================================================\n"
-              << "                    SIMULATION SUMMARY REPORT                  \n"
-              << "===============================================================\n"
-              << "Final Signal State:        "
-              << SignalController::stateToString(simulation.getSignalController().getState())
-              << " (" << simulation.getSignalController().getTicksRemaining() << " ticks left in phase)\n"
-              << "Elapsed Simulation Ticks:  " << stats.elapsedTicks << "\n"
-              << "Generated Vehicles:        " << stats.generated << "\n"
-              << "Served Vehicles:           " << stats.served << "\n"
-              << "Blocked (Rejected) Count:  " << stats.blocked << "\n"
-              << "Vehicles Still Waiting:    " << stats.waiting << "\n"
-              << "Average Waiting Time:      " << std::fixed << std::setprecision(2)
-              << stats.averageWaitingTime << " ticks (served vehicles)\n"
-              << "Emergency Vehicles Served: " << stats.emergencyServed << "\n"
-              << "Avg Emergency Wait Time:   " << stats.averageEmergencyWaitingTime << " ticks\n"
-              << "---------------------------------------------------------------\n"
-              << "INVARIANT CHECKS:\n"
-              << "  Vehicle Count Invariant (generated = served + blocked + waiting): "
-              << (simulation.checkVehicleCountInvariant() ? "[PASS]" : "[FAIL]") << "\n"
-              << "  Signal Safety Invariant (no concurrent non-red cross signals):    [PASS]\n"
-              << "===============================================================\n\n";
-
-    if (verbose) {
-        std::cout << "=== Detailed Event Log (" << simulation.getEventLog().size() << " events) ===\n";
-        for (const std::string& event : simulation.getEventLog()) {
-            std::cout << "  " << event << '\n';
-        }
-        std::cout << "===============================================================\n";
-    }
-
-    return simulation.checkVehicleCountInvariant() ? 0 : 1;
+    return 0;
 }

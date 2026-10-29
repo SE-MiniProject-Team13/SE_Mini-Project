@@ -3,42 +3,111 @@ name: C++ Tests
 'on':
   push:
     branches:
+      - main
+      - feat/naveen-nfr-usability-portability
       - feature/signal-control
+      - feature/emergency-priority
+      - feature/robustness-memory-safety
   pull_request:
     branches:
       - main
 
 jobs:
-  test:
-    name: Build & Test (C++11)
+  ubuntu-tests:
+    name: Build and test on Ubuntu (C++11)
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Build and Run Vehicle Queue Tests
+      - name: Build application and check quick summary flow
+        run: |
+          g++ --version
+          g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
+            src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
+            src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            -o traffic_sim
+          printf '3\n0\n' | ./traffic_sim > smoke-output.txt
+          grep -q '=== Simulation Summary ===' smoke-output.txt
+
+      - name: Build and run simulation engine usability and statistics tests
         run: |
           g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
-            src/vehicle_queue.cpp tests/test_vehicle_queue.cpp \
-            -o test_vehicle_queue
+            src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
+            src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            tests/test_simulation_engine.cpp -o test_simulation_engine
+          ./test_simulation_engine
+
+      - name: Build and run vehicle queue tests
+        run: |
+          g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
+            src/vehicle_queue.cpp tests/test_vehicle_queue.cpp -o test_vehicle_queue
           ./test_vehicle_queue
 
-      - name: Build and Run Signal Controller Tests
+      - name: Build and run signal controller tests
         run: |
           g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
             src/signal_controller.cpp src/vehicle_queue.cpp tests/test_signal_controller.cpp \
             -o test_signal_controller
           ./test_signal_controller
 
-      - name: Build and Run Tests under Sanitizers (ASan + UBSan)
+      - name: Build and run configuration tests
+        run: |
+          g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
+            src/config.cpp tests/test_config.cpp -o test_config
+          ./test_config
+
+      - name: Build and run emergency handler tests
+        run: |
+          g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
+            src/emergency_handler.cpp src/signal_controller.cpp src/vehicle_queue.cpp \
+            tests/test_emergency_handler.cpp -o test_emergency_handler
+          ./test_emergency_handler
+
+      - name: Run critical unit tests with sanitizers
         run: |
           g++ -std=c++11 -Wall -Wextra -pedantic -fsanitize=address,undefined -g -Iinclude \
-            src/vehicle_queue.cpp tests/test_vehicle_queue.cpp \
-            -o test_vehicle_queue_asan
+            src/vehicle_queue.cpp tests/test_vehicle_queue.cpp -o test_vehicle_queue_asan
           ./test_vehicle_queue_asan
-
           g++ -std=c++11 -Wall -Wextra -pedantic -fsanitize=address,undefined -g -Iinclude \
             src/signal_controller.cpp src/vehicle_queue.cpp tests/test_signal_controller.cpp \
             -o test_signal_controller_asan
           ./test_signal_controller_asan
+          g++ -std=c++11 -Wall -Wextra -pedantic -fsanitize=address,undefined -g -Iinclude \
+            src/emergency_handler.cpp src/signal_controller.cpp src/vehicle_queue.cpp \
+            tests/test_emergency_handler.cpp -o test_emergency_handler_asan
+          ./test_emergency_handler_asan
+
+  windows-mingw-build:
+    name: Build with Windows MinGW-w64
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up MinGW-w64 g++
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: mingw-w64-ucrt-x86_64-gcc
+
+      - name: Build app and statistics test, then check the summary flow
+        run: |
+          g++ --version
+          g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
+            src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
+            src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            -o traffic_sim.exe
+          printf '3\n0\n' | ./traffic_sim.exe > smoke-output.txt
+          grep -q '=== Simulation Summary ===' smoke-output.txt
+          g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
+            src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
+            src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            tests/test_simulation_engine.cpp -o test_simulation_engine.exe
+          ./test_simulation_engine.exe

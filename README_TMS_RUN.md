@@ -1,17 +1,8 @@
-# Traffic Management Simulation (TMS) - Sprint 1
+# Running the Traffic Management Simulation
 
-C++11 console simulation of a four-approach intersection. The implementation includes:
-- Six-state signal cycle: NS Green -> NS Yellow -> All-Red 1 -> EW Green -> EW Yellow -> All-Red 2 -> NS Green.
-- Bounded queues for each approach, with emergency vehicles prioritized within each queue.
-- Fixed or adaptive green duration (FR-21, FR-22).
-- Non-conflicting signal safety invariant (FR-20, BR-01, NFR-05).
-- Emergency pre-emption hooks and logging (`EMERGENCY_ARRIVAL`, `EMERGENCY_START`, `EMERGENCY_END`, `VEHICLE_DEPARTURE`).
-- Vehicle-count invariant check (`generated == served + blocked + waiting`).
-- Deterministic 100-seed randomized signal safety test suite.
+The current application is a C++11 console program. Use g++ 9 or later from the repository root; CMake is optional and is not needed for these commands.
 
-## Build (MinGW g++ on Windows)
-
-Run these commands from the repository root in PowerShell:
+## Windows with MinGW g++
 
 ```powershell
 # Build the main simulation application
@@ -21,19 +12,11 @@ g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/vehicle_queue.cpp src/signa
 Alternatively, use the automated build and test script:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\build_and_test.ps1
+g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp -o traffic_sim.exe
+.\traffic_sim.exe
 ```
 
-## Run
-
-```powershell
-# 1-Minute Demonstration mode (shows initial state, arrivals, phase transitions, departures, summary)
-.\tms.exe
-
-# Run 200 ticks in adaptive mode
-.\tms.exe 200 adaptive
-
-# Run 200 ticks in fixed mode
-.\tms.exe 200 fixed
+## Ubuntu
 
 # Run with verbose tick logging
 .\tms.exe 50 fixed --verbose
@@ -48,42 +31,21 @@ same schedule. The default demonstration and existing command-line modes remain
 available unchanged.
 
 ## Build and Run Tests
-
-Each test executable can be built and run independently:
-
-```powershell
-# 1. Vehicle Queue Unit Tests
-g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/vehicle_queue.cpp tests/test_vehicle_queue.cpp -o test_vehicle_queue.exe
-.\test_vehicle_queue.exe
-
-# 2. Signal Controller Unit Tests
-g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/signal_controller.cpp src/vehicle_queue.cpp tests/test_signal_controller.cpp -o test_signal_controller.exe
-.\test_signal_controller.exe
-
-# 3. Traffic Simulation Unit Tests
-g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/vehicle_queue.cpp src/signal_controller.cpp src/simulation.cpp tests/test_simulation.cpp -o test_simulation.exe
-.\test_simulation.exe
-
-# 4. Emergency Pre-emption Tests
-g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/vehicle_queue.cpp src/signal_controller.cpp src/simulation.cpp tests/test_emergency_preemption.cpp -o test_emergency_preemption.exe
-.\test_emergency_preemption.exe
-
-# 5. Final Requirements Regression Tests
-g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/vehicle_queue.cpp src/signal_controller.cpp src/simulation.cpp tests/test_final_requirements.cpp -o test_final_requirements.exe
-.\test_final_requirements.exe
-
-# 6. Signal Transition Safety Tests
-g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/vehicle_queue.cpp src/signal_controller.cpp src/simulation.cpp tests/test_signal_transition_safety.cpp -o test_signal_transition_safety.exe
-.\test_signal_transition_safety.exe
-
-# 7. Randomized Signal Safety Tests (100 Seeds, 500 Ticks Each)
-g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/vehicle_queue.cpp src/signal_controller.cpp src/simulation.cpp tests/test_randomized_safety.cpp -o test_randomized_safety.exe
-.\test_randomized_safety.exe
+```sh
+g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp -o traffic_sim
+./traffic_sim
 ```
 
-## Invariants Verified
+At the menu, select **3** to run quietly to the configured duration and display the summary. This is the fastest first-run path and requires one menu selection. Select **4** to change settings; each setting displays its valid range, and invalid values are rejected with a correction prompt.
 
-1. **Safety Invariant:** Opposing approaches (North-South vs East-West) never simultaneously show non-red (green/yellow) lights.
-2. **Clearance Invariant:** Every green-to-red change undergoes configured yellow clearance and fixed 1-tick all-red clearance.
-3. **Vehicle Accounting Invariant:** `generatedCount == servedCount + blockedCount + waitingCount` at all ticks.
-4. **Memory Safety:** Every dynamic vehicle allocation is accounted for: enqueued vehicles are owned by `VehicleQueue`, rejected vehicles are immediately freed, and served vehicles are freed after metrics collection.
+After a run, select **6** to write `report.txt` and `events.csv` into the current working directory.
+
+## Windows build and tests
+
+Run this from PowerShell at the repository root:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\build_and_test.ps1
+```
+
+It builds the application, checks that menu option 3 displays the summary, and builds/runs all test suites. Generated `.exe` files and exported reports are ignored by Git.
