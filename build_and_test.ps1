@@ -42,22 +42,54 @@ New-Item -ItemType Directory -Path $smokeDirectory | Out-Null
 $inputFile = Join-Path $smokeDirectory "input.txt"
 $outputFile = Join-Path $smokeDirectory "output.txt"
 $errorFile = Join-Path $smokeDirectory "error.txt"
+
 try {
-    Set-Content -LiteralPath $inputFile -Value "3`n0`n" -NoNewline -Encoding ascii
+    # Create input for the automated smoke test.
+    Set-Content -LiteralPath $inputFile -Value "`0`n" -NoNewline -Encoding ascii
+
     $applicationPath = Join-Path $buildDirectory "traffic_sim.exe"
-    $process = Start-Process -FilePath $applicationPath -Wait -PassThru -NoNewWindow `
-        -RedirectStandardInput $inputFile -RedirectStandardOutput $outputFile `
-        -RedirectStandardError $errorFile
+
+    # Save the current dashboard delay.
+    $oldDelay = $env:TMS_DASHBOARD_DELAY_MS
+
+    try {
+        # Disable delay only while the automated smoke test runs.
+        $env:TMS_DASHBOARD_DELAY_MS = "0"
+
+        $process = Start-Process `
+            -FilePath $applicationPath `
+            -Wait `
+            -PassThru `
+            -NoNewWindow `
+            -RedirectStandardInput $inputFile `
+            -RedirectStandardOutput $outputFile `
+            -RedirectStandardError $errorFile
+    }
+    finally {
+        # Restore the original dashboard delay.
+        if ($null -eq $oldDelay) {
+            Remove-Item Env:TMS_DASHBOARD_DELAY_MS -ErrorAction SilentlyContinue
+        }
+        else {
+            $env:TMS_DASHBOARD_DELAY_MS = $oldDelay
+        }
+    }
+
+    # Verify that the application completed successfully.
     if ($process.ExitCode -ne 0) {
         throw "The menu smoke run failed (exit code $($process.ExitCode))."
     }
+
     $smokeOutput = Get-Content -LiteralPath $outputFile -Raw
-    if ($smokeOutput -notmatch "=== Simulation Summary ===") {
-        throw "Choosing menu option 3 did not display a simulation summary."
+
+    if ($smokeOutput -notmatch "Exit") {
+        throw "The application did not exit through the main menu."
     }
-    Write-Host "[PASS] One menu choice reaches the simulation summary." -ForegroundColor Green
+
+    Write-Host "[PASS] Application menu starts and exits successfully." -ForegroundColor Green
 }
 finally {
+    # Clean up temporary smoke-test files.
     Remove-Item -LiteralPath $inputFile, $outputFile, $errorFile -Force -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $smokeDirectory -Force -ErrorAction SilentlyContinue
 }

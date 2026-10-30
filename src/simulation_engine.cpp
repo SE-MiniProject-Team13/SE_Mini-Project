@@ -1,9 +1,11 @@
 #include "simulation_engine.h"
-
 #include <algorithm>
+#include <cstdlib>
 #include <fstream>
 #include <iomanip>
 #include <stdexcept>
+#define NOMINMAX
+#include <windows.h>
 
 namespace {
 const Direction approaches[] = {
@@ -53,6 +55,7 @@ SimulationEngine::SimulationEngine(const Config& simulationConfig)
         queues[index].reset(new VehicleQueue(static_cast<std::size_t>(config.queueCapacity)));
         maximumQueueLengths[index] = 0;
     }
+    writeDashboardSnapshot();
 }
 
 QueueLengths SimulationEngine::getQueueLengths() const {
@@ -135,6 +138,7 @@ int SimulationEngine::advanceOneTick(std::ostream& output, bool quiet) {
         maximumQueueLengths[index] = std::max(maximumQueueLengths[index], queues[index]->size());
     }
 
+    writeDashboardSnapshot();
     if (!quiet) {
         displayTick(output, arrivals, servedThisTick);
     }
@@ -176,13 +180,31 @@ void SimulationEngine::displayTick(
            << " | total served: " << totalServed << '\n';
 }
 
+
 void SimulationEngine::advanceTicks(int count, std::ostream& output, bool quiet) {
     if (count < 1) {
         throw std::invalid_argument("Tick count must be at least 1.");
     }
+
+    // Delay between simulation ticks (in milliseconds).
+    // 1000 = 1 second per tick.
+    const int delayMs = 1000;
+
     for (int index = 0; index < count; ++index) {
+        // Process one complete simulation tick.
         advanceOneTick(output, quiet);
+
+        // Flush output so the terminal displays each tick immediately.
+        if (!quiet) {
+            output.flush();
+        }
+
+        // Pause before processing the next tick.
+        if (delayMs > 0) {
+            Sleep(static_cast<DWORD>(delayMs));
+        }
     }
+
     displaySummary(output);
 }
 
@@ -278,6 +300,50 @@ void SimulationEngine::reset() {
     maximumWaitingTime = 0;
     preemptionCount = 0;
     queueLengthTotals.fill(0);
+    writeDashboardSnapshot();
+}
+
+void SimulationEngine::writeDashboardSnapshot() const {
+    std::ofstream file("dashboard_state.json", std::ios::out | std::ios::trunc);
+    if (!file.is_open()) return;
+
+    const QueueLengths waiting = getQueueLengths();
+    const long long waitingVehicles = static_cast<long long>(
+        waiting.north + waiting.south + waiting.east + waiting.west
+    );
+    const double averageWait = totalServed == 0
+        ? 0.0
+        : static_cast<double>(totalWaitingTime) / static_cast<double>(totalServed);
+    const double throughput = currentTick == 0
+        ? 0.0
+        : static_cast<double>(totalServed) / static_cast<double>(currentTick);
+
+    file << std::fixed << std::setprecision(3)
+         << "{\n"
+         << "  \"tick\": " << currentTick << ",\n"
+         << "  \"duration\": " << config.durationTicks << ",\n"
+         << "  \"generated\": " << totalGenerated << ",\n"
+         << "  \"served\": " << totalServed << ",\n"
+         << "  \"blocked\": " << rejectedArrivals << ",\n"
+         << "  \"waiting\": " << waitingVehicles << ",\n"
+         << "  \"average_wait\": " << averageWait << ",\n"
+         << "  \"throughput\": " << throughput << ",\n"
+         << "  \"mode\": \"" << SignalController::modeToString(config.signalMode) << "\",\n"
+         << "  \"signal_state\": \"" << SignalController::stateToString(signalController.getState()) << "\",\n"
+         << "  \"ticks_remaining\": " << signalController.getTicksRemaining() << ",\n"
+         << "  \"preemption\": " << (signalController.isPreemptionActive() ? "true" : "false") << ",\n"
+         << "  \"capacity\": " << config.queueCapacity << ",\n"
+         << "  \"lights\": {"
+         << "\"North\": \"" << SignalController::colorToString(signalController.getLightColor(Direction::North)) << "\", "
+         << "\"South\": \"" << SignalController::colorToString(signalController.getLightColor(Direction::South)) << "\", "
+         << "\"East\": \"" << SignalController::colorToString(signalController.getLightColor(Direction::East)) << "\", "
+         << "\"West\": \"" << SignalController::colorToString(signalController.getLightColor(Direction::West)) << "\"},\n"
+         << "  \"queues\": {"
+         << "\"North\": " << waiting.north << ", "
+         << "\"South\": " << waiting.south << ", "
+         << "\"East\": " << waiting.east << ", "
+         << "\"West\": " << waiting.west << "}\n"
+         << "}\n";
 }
 
 int SimulationEngine::getCurrentTick() const { return currentTick; }

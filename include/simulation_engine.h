@@ -49,6 +49,8 @@ public:
     bool exportReport(const std::string& path, std::string& error) const;
     bool exportEventsCsv(const std::string& path, std::string& error) const;
     void reset();
+    // Writes a read-only snapshot for the optional visual dashboard.
+    void writeDashboardSnapshot() const;
 
     int getCurrentTick() const;
     long long getTotalGenerated() const;

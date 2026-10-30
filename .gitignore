@@ -1,4 +1,3 @@
-
 # Compiled Windows executables
 *.exe
 .codex-build/
@@ -10,3 +9,11 @@
 # Generated simulation exports
 report.txt
 events.csv
+
+# Python cache
+__pycache__/
+*.pyc
+
+dashboard_state.json
+
+dashboard_state.json
