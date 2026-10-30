@@ -89,4 +89,11 @@ Build-And-Run "test_signal_control_comparison" @(
     "tests/test_signal_control_comparison.cpp"
 )
 
-Write-Host "`nAll application, usability, and unit-test checks passed." -ForegroundColor Green
+# Performance and efficiency tests (NFR-TMS-01 / TC-48 to TC-51)
+Build-And-Run "test_performance" @(
+    "src/config.cpp", "src/event_logger.cpp", "src/signal_controller.cpp",
+    "src/simulation_engine.cpp", "src/vehicle_generator.cpp",
+    "src/vehicle_queue.cpp", "tests/test_performance.cpp"
+)
+
+Write-Host "`nAll application, usability, performance, and unit-test checks passed." -ForegroundColor Green

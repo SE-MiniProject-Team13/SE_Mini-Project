@@ -8,6 +8,7 @@ name: C++ Tests
       - feature/signal-control
       - feature/emergency-priority
       - feature/robustness-memory-safety
+      - feature/performance-efficiency
   pull_request:
     branches:
       - main
@@ -66,6 +67,14 @@ jobs:
             tests/test_emergency_handler.cpp -o test_emergency_handler
           ./test_emergency_handler
 
+      - name: Build and run performance and efficiency tests
+        run: |
+          g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
+            src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
+            src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            tests/test_performance.cpp -o test_performance
+          ./test_performance
+
       - name: Run critical unit tests with sanitizers
         run: |
           g++ -std=c++11 -Wall -Wextra -pedantic -fsanitize=address,undefined -g -Iinclude \
@@ -113,3 +122,8 @@ jobs:
             src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
             tests/test_simulation_engine.cpp -o test_simulation_engine.exe
           ./test_simulation_engine.exe
+          g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
+            src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
+            src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            tests/test_performance.cpp -o test_performance.exe
+          ./test_performance.exe
