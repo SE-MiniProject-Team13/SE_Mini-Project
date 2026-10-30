@@ -22,10 +22,10 @@ void EventLogger::record(
     Direction approach,
     const std::string& details
 ) {
-    events.push_back(SimulationEvent(tick, type, vehicleId, vehicleType, approach, details));
+    events.push_back(LoggedSimulationEvent(tick, type, vehicleId, vehicleType, approach, details));
 }
 
-const std::vector<SimulationEvent>& EventLogger::getEvents() const {
+const std::vector<LoggedSimulationEvent>& EventLogger::getEvents() const {
     return events;
 }
 
@@ -37,7 +37,7 @@ bool EventLogger::writeCsv(const std::string& path, std::string& error) const {
     }
 
     file << "tick,event,vehicle_id,vehicle_type,approach,details\n";
-    for (std::vector<SimulationEvent>::const_iterator event = events.begin();
+    for (std::vector<LoggedSimulationEvent>::const_iterator event = events.begin();
          event != events.end(); ++event) {
         file << event->tick << ','
              << eventTypeToString(event->type) << ',';

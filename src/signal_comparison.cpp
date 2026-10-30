@@ -119,6 +119,47 @@ std::vector<ScheduledArrival> generateArrivalSchedule(int ticks, int seed) {
     return schedule;
 }
 
+std::vector<ScheduledArrival> generateArrivalSchedule(
+    int ticks,
+    int seed,
+    double arrivalProbability,
+    double emergencyProbability
+) {
+    if (arrivalProbability < 0.0 || arrivalProbability > 1.0 ||
+        emergencyProbability < 0.0 || emergencyProbability > 1.0) {
+        throw std::invalid_argument("Arrival and emergency probabilities must be in [0, 1]");
+    }
+
+    std::vector<ScheduledArrival> schedule;
+    if (ticks < 0) {
+        ticks = 0;
+    }
+
+    std::mt19937 random(static_cast<unsigned int>(seed));
+    std::bernoulli_distribution arrivalDistribution(arrivalProbability);
+    std::bernoulli_distribution emergencyDistribution(emergencyProbability);
+    const Direction directions[4] = {
+        Direction::North, Direction::South,
+        Direction::East, Direction::West
+    };
+    int sequenceId = 1;
+
+    for (int tick = 0; tick < ticks; ++tick) {
+        for (int approach = 0; approach < 4; ++approach) {
+            if (!arrivalDistribution(random)) {
+                continue;
+            }
+            ScheduledArrival arrival;
+            arrival.tick = tick;
+            arrival.sequenceId = sequenceId++;
+            arrival.direction = directions[approach];
+            arrival.emergency = emergencyDistribution(random);
+            schedule.push_back(arrival);
+        }
+    }
+    return schedule;
+}
+
 SignalModeRun runScheduledSimulation(
     const SimulationConfig& config,
     SignalMode mode,
@@ -172,6 +213,24 @@ SignalControlComparison compareSignalModes(
     SignalControlComparison comparison;
     comparison.seed = seed;
     comparison.schedule = generateArrivalSchedule(config.maxTicks, seed);
+    comparison.fixed =
+        runScheduledSimulation(config, SignalMode::Fixed, comparison.schedule);
+    comparison.adaptive =
+        runScheduledSimulation(config, SignalMode::Adaptive, comparison.schedule);
+    return comparison;
+}
+
+SignalControlComparison compareSignalModes(
+    const SimulationConfig& config,
+    int seed,
+    double arrivalProbability,
+    double emergencyProbability
+) {
+    SignalControlComparison comparison;
+    comparison.seed = seed;
+    comparison.schedule = generateArrivalSchedule(
+        config.maxTicks, seed, arrivalProbability, emergencyProbability
+    );
     comparison.fixed =
         runScheduledSimulation(config, SignalMode::Fixed, comparison.schedule);
     comparison.adaptive =

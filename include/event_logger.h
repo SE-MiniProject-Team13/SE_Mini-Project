@@ -15,7 +15,7 @@ enum class SimulationEventType {
     EmergencyEnd
 };
 
-struct SimulationEvent {
+struct LoggedSimulationEvent {
     int tick;
     SimulationEventType type;
     int vehicleId;
@@ -23,7 +23,7 @@ struct SimulationEvent {
     Direction approach;
     std::string details;
 
-    SimulationEvent(int eventTick, SimulationEventType eventType,
+    LoggedSimulationEvent(int eventTick, SimulationEventType eventType,
                     int id, VehicleType typeOfVehicle, Direction direction,
                     const std::string& description)
         : tick(eventTick), type(eventType), vehicleId(id),
@@ -32,13 +32,13 @@ struct SimulationEvent {
 
 class EventLogger {
 private:
-    std::vector<SimulationEvent> events;
+    std::vector<LoggedSimulationEvent> events;
 
 public:
     void record(int tick, SimulationEventType type, int vehicleId,
                 VehicleType vehicleType, Direction approach,
                 const std::string& details);
-    const std::vector<SimulationEvent>& getEvents() const;
+    const std::vector<LoggedSimulationEvent>& getEvents() const;
     bool writeCsv(const std::string& path, std::string& error) const;
     void clear();
     static const char* eventTypeToString(SimulationEventType type);

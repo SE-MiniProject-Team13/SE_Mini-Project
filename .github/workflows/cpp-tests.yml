@@ -27,6 +27,7 @@ jobs:
           g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
             src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
             src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp \
             -o traffic_sim
           printf '3\n0\n' | ./traffic_sim > smoke-output.txt
           grep -q '=== Simulation Summary ===' smoke-output.txt
@@ -103,6 +104,7 @@ jobs:
           g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
             src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
             src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp \
             -o traffic_sim.exe
           printf '3\n0\n' | ./traffic_sim.exe > smoke-output.txt
           grep -q '=== Simulation Summary ===' smoke-output.txt

@@ -48,6 +48,13 @@ std::vector<ScheduledArrival> generateArrivalSchedule(
     int seed
 );
 
+std::vector<ScheduledArrival> generateArrivalSchedule(
+    int ticks,
+    int seed,
+    double arrivalProbability,
+    double emergencyProbability
+);
+
 SignalModeRun runScheduledSimulation(
     const SimulationConfig& config,
     SignalMode mode,
@@ -57,6 +64,13 @@ SignalModeRun runScheduledSimulation(
 SignalControlComparison compareSignalModes(
     const SimulationConfig& config,
     int seed
+);
+
+SignalControlComparison compareSignalModes(
+    const SimulationConfig& config,
+    int seed,
+    double arrivalProbability,
+    double emergencyProbability
 );
 
 void printComparison(
