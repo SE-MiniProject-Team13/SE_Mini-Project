@@ -71,6 +71,11 @@ Build-And-Run "test_simulation_engine" @(
 
 # Critical module unit tests.
 Build-And-Run "test_vehicle_queue" @("src/vehicle_queue.cpp", "tests/test_vehicle_queue.cpp")
+Build-And-Run "test_event_exports" @(
+    "src/config.cpp", "src/event_logger.cpp", "src/signal_controller.cpp",
+    "src/simulation_engine.cpp", "src/vehicle_generator.cpp",
+    "src/vehicle_queue.cpp", "tests/test_event_exports.cpp"
+)
 Build-And-Run "test_signal_controller" @("src/signal_controller.cpp", "src/vehicle_queue.cpp", "tests/test_signal_controller.cpp")
 Build-And-Run "test_config" @("src/config.cpp", "tests/test_config.cpp")
 Build-And-Run "test_emergency_handler" @("src/emergency_handler.cpp", "src/signal_controller.cpp", "src/vehicle_queue.cpp", "tests/test_emergency_handler.cpp")
