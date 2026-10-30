@@ -11,7 +11,8 @@ SignalController::SignalController(const SignalTimings& timings)
       preemptionActive(false),
       preemptedPhase(Phase::NS),
       safetyViolationDetected(false),
-      isFirstTick(true) {
+      isFirstTick(true),
+      ticksInCurrentState(0) {
     initialTimings.allRedTime = SignalTimings::ALL_RED_TICKS;
     activeTimings.allRedTime = SignalTimings::ALL_RED_TICKS;
     pendingTimings.allRedTime = SignalTimings::ALL_RED_TICKS;
@@ -23,6 +24,17 @@ bool SignalController::advanceState(int tick, const QueueLengths& queueLengths) 
 
     if (isFirstTick) {
         isFirstTick = false;
+        ticksInCurrentState = 1;
+        checkSafety();
+        return false;
+    }
+
+    ++ticksInCurrentState;
+
+    // During active preemption on a green phase, maintain green until releasePreemption()
+    if (preemptionActive &&
+        ((currentState == SignalState::NS_Green && preemptedPhase == Phase::NS) ||
+         (currentState == SignalState::EW_Green && preemptedPhase == Phase::EW))) {
         checkSafety();
         return false;
     }
@@ -43,6 +55,7 @@ bool SignalController::advanceState(const QueueLengths& queueLengths) {
 }
 
 void SignalController::transitionToNextState(const QueueLengths& queueLengths) {
+    ticksInCurrentState = 0;
     switch (currentState) {
         case SignalState::NS_Green:
             currentState = SignalState::NS_Yellow;
@@ -55,8 +68,14 @@ void SignalController::transitionToNextState(const QueueLengths& queueLengths) {
             break;
 
         case SignalState::All_Red_1:
-            currentState = SignalState::EW_Green;
-            ticksRemaining = determineGreenDuration(SignalState::EW_Green, queueLengths);
+            if (preemptionActive && preemptedPhase == Phase::NS) {
+                // Return to NS_Green for emergency preemption after safe All-Red (SAD Section 553 / FR-29)
+                currentState = SignalState::NS_Green;
+                ticksRemaining = activeTimings.gmax;
+            } else {
+                currentState = SignalState::EW_Green;
+                ticksRemaining = determineGreenDuration(SignalState::EW_Green, queueLengths);
+            }
             break;
 
         case SignalState::EW_Green:
@@ -70,13 +89,19 @@ void SignalController::transitionToNextState(const QueueLengths& queueLengths) {
             break;
 
         case SignalState::All_Red_2:
-            currentState = SignalState::NS_Green;
-            ++cycleCount;
-            if (hasPendingTimingChanges) {
-                activeTimings = pendingTimings;
-                hasPendingTimingChanges = false;
+            if (preemptionActive && preemptedPhase == Phase::EW) {
+                // Return to EW_Green for emergency preemption after safe All-Red (SAD Section 553 / FR-29)
+                currentState = SignalState::EW_Green;
+                ticksRemaining = activeTimings.gmax;
+            } else {
+                currentState = SignalState::NS_Green;
+                ++cycleCount;
+                if (hasPendingTimingChanges) {
+                    activeTimings = pendingTimings;
+                    hasPendingTimingChanges = false;
+                }
+                ticksRemaining = determineGreenDuration(SignalState::NS_Green, queueLengths);
             }
-            ticksRemaining = determineGreenDuration(SignalState::NS_Green, queueLengths);
             break;
     }
 }
@@ -299,21 +324,37 @@ bool SignalController::acceptPreemption(Phase phase) {
     const bool opposingGreen =
         (currentState == SignalState::NS_Green && phase == Phase::EW) ||
         (currentState == SignalState::EW_Green && phase == Phase::NS);
-
-    if (opposingGreen && ticksRemaining > 1) {
-        ticksRemaining = 1;
-        return true;
+    if (!opposingGreen) {
+        return false;
     }
 
+    // Keep the configured minimum green before shortening for an opposing emergency.
+    const int effectiveElapsed = ticksInCurrentState > 0 ? ticksInCurrentState : 1;
+    const int safeRemaining = effectiveElapsed < activeTimings.gmin
+        ? activeTimings.gmin - effectiveElapsed + 1
+        : 1;
+    if (safeRemaining < ticksRemaining) {
+        ticksRemaining = safeRemaining;
+        return true;
+    }
     return false;
 }
 
 void SignalController::releasePreemption() {
     preemptionActive = false;
+    // When preemption green ends, transition immediately to yellow on the next advanceState tick
+    // (FR-31, SAD Section 553: continues normal sequence with yellow -> all-red -> other phase)
+    if (currentState == SignalState::NS_Green || currentState == SignalState::EW_Green) {
+        ticksRemaining = 1;
+    }
 }
 
 Phase SignalController::getPreemptedPhase() const {
     return preemptedPhase;
+}
+
+int SignalController::getTicksInCurrentState() const {
+    return ticksInCurrentState;
 }
 
 void SignalController::reset() {
@@ -326,6 +367,7 @@ void SignalController::reset() {
     preemptedPhase = Phase::NS;
     safetyViolationDetected = false;
     isFirstTick = true;
+    ticksInCurrentState = 0;
     ticksRemaining = determineGreenDuration(SignalState::NS_Green, QueueLengths());
 }
 

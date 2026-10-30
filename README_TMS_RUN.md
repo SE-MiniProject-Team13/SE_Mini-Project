@@ -1,51 +1,59 @@
-# Traffic Management Simulation (TMS) - Sprint 1
+# Running the Traffic Management Simulation
 
-C++11 console simulation of a four-approach intersection. The implementation includes:
-- Six-state signal cycle: NS Green -> NS Yellow -> All-Red 1 -> EW Green -> EW Yellow -> All-Red 2 -> NS Green.
-- Bounded queues for each approach, with emergency vehicles prioritized within each queue.
-- Fixed or adaptive green duration (FR-21, FR-22).
-- Non-conflicting signal safety invariant (FR-20, BR-01, NFR-05).
-- Emergency pre-emption hooks and logging (`EMERGENCY_ARRIVAL`, `EMERGENCY_START`, `EMERGENCY_END`, `VEHICLE_DEPARTURE`).
-- Vehicle-count invariant check (`generated == served + blocked + waiting`).
-- Deterministic 100-seed randomized signal safety test suite.
+The current application is a C++11 console program. Use g++ 9 or later from the repository root; CMake is optional and is not needed for these commands.
 
-## Build (MinGW g++ on Windows)
-
-Run these commands from the repository root in PowerShell:
+## Windows with MinGW g++
 
 ```powershell
 # Build the main simulation application
-g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/vehicle_queue.cpp src/signal_controller.cpp src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp src/main.cpp -o tms.exe
+g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp -o traffic_sim.exe
+.\traffic_sim.exe
 ```
 
-Alternatively, use the automated build and test script:
-```powershell
-powershell -ExecutionPolicy Bypass -File .\build_and_test.ps1
+## Ubuntu
+
+```sh
+g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp -o traffic_sim
+./traffic_sim
 ```
+
+With no arguments, the configured `SimulationEngine` menu opens. Select **3** to run quietly to the configured duration and display the summary. This is the fastest first-run path and requires one menu selection. Select **4** to change settings; each setting displays its valid range, and invalid values are rejected with a correction prompt.
+
+Select **5** to compare Fixed and Adaptive signal control on one shared arrival schedule. After a run, select **7** to write `report.txt` and `events.csv` into the current working directory.
 
 ## Run
 
 ```powershell
-# 1-Minute Demonstration mode (shows initial state, arrivals, phase transitions, departures, summary)
-.\tms.exe
+# Configured simulation menu (default)
+.\traffic_sim.exe
+
+# Sprint 1 demonstration (initial state, arrivals, phase transitions, summary)
+.\traffic_sim.exe --demo
 
 # Run 200 ticks in adaptive mode
-.\tms.exe 200 adaptive
+.\traffic_sim.exe 200 adaptive
 
 # Run 200 ticks in fixed mode
-.\tms.exe 200 fixed
+.\traffic_sim.exe 200 fixed
 
 # Run with verbose tick logging
-.\tms.exe 50 fixed --verbose
+.\traffic_sim.exe 50 fixed --verbose
 
-# Interactive console menu, including a Fixed vs Adaptive comparison (option 5)
-.\tms.exe --menu
+# Standalone Fixed vs Adaptive comparison menu (option 5)
+.\traffic_sim.exe --menu
 ```
 
-The comparison menu asks for a duration and seed, generates one deterministic
-arrival schedule, and runs separate Fixed and Adaptive simulations against that
-same schedule. The default demonstration and existing command-line modes remain
-available unchanged.
+The comparison asks for a duration and seed (or uses the configured seed from the main menu), generates one deterministic arrival schedule, and runs separate Fixed and Adaptive simulations against that same schedule.
+
+## Windows build and tests
+
+Run this from PowerShell at the repository root:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\build_and_test.ps1
+```
+
+It builds the application, checks that menu option 3 displays the summary, and builds/runs all test suites. Generated `.exe` files and exported reports are ignored by Git.
 
 ## Build and Run Tests
 
@@ -79,6 +87,26 @@ g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/vehicle_queue.cpp src/signa
 # 7. Randomized Signal Safety Tests (100 Seeds, 500 Ticks Each)
 g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/vehicle_queue.cpp src/signal_controller.cpp src/simulation.cpp tests/test_randomized_safety.cpp -o test_randomized_safety.exe
 .\test_randomized_safety.exe
+
+# 8. Configuration Tests
+g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/config.cpp tests/test_config.cpp -o test_config.exe
+.\test_config.exe
+
+# 9. Emergency Handler Tests
+g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/emergency_handler.cpp src/signal_controller.cpp src/vehicle_queue.cpp tests/test_emergency_handler.cpp -o test_emergency_handler.exe
+.\test_emergency_handler.exe
+
+# 10. Simulation Engine Tests
+g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/config.cpp src/event_logger.cpp src/signal_controller.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp tests/test_simulation_engine.cpp -o test_simulation_engine.exe
+.\test_simulation_engine.exe
+
+# 11. Simulation Analytics Tests
+g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/vehicle_queue.cpp src/signal_controller.cpp src/simulation.cpp tests/test_simulation_analytics.cpp -o test_simulation_analytics.exe
+.\test_simulation_analytics.exe
+
+# 12. Signal Control Comparison Tests
+g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/vehicle_queue.cpp src/signal_controller.cpp src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp tests/test_signal_control_comparison.cpp -o test_signal_control_comparison.exe
+.\test_signal_control_comparison.exe
 ```
 
 ## Invariants Verified
