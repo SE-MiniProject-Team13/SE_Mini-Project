@@ -4,8 +4,14 @@
 #include <fstream>
 #include <iomanip>
 #include <stdexcept>
+#ifdef _WIN32
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include <windows.h>
+#else
+#include <unistd.h>
+#endif
 
 namespace {
 const Direction approaches[] = {
@@ -186,25 +192,28 @@ void SimulationEngine::advanceTicks(int count, std::ostream& output, bool quiet)
         throw std::invalid_argument("Tick count must be at least 1.");
     }
 
-    // Delay between simulation ticks (in milliseconds).
-    // 1000 = 1 second per tick.
-    const int delayMs = 1000;
+   // Delay between simulation ticks (in milliseconds).
+   // 1000 = 1 second per tick.
+   const int delayMs = 1000;
 
-    for (int index = 0; index < count; ++index) {
-        // Process one complete simulation tick.
-        advanceOneTick(output, quiet);
+   for (int index = 0; index < count; ++index) {
+    // Process one complete simulation tick.
+    advanceOneTick(output, quiet);
 
-        // Flush output so the terminal displays each tick immediately.
-        if (!quiet) {
-            output.flush();
-        }
-
-        // Pause before processing the next tick.
-        if (delayMs > 0) {
-            Sleep(static_cast<DWORD>(delayMs));
-        }
+    // Flush output so the terminal displays each tick immediately.
+    if (!quiet) {
+        output.flush();
     }
 
+    // Platform-independent delay.
+    if (delayMs > 0) {
+#ifdef _WIN32
+        Sleep(static_cast<DWORD>(delayMs));
+#else
+        usleep(static_cast<useconds_t>(delayMs) * 1000);
+#endif
+    }
+}
     displaySummary(output);
 }
 
