@@ -93,7 +93,6 @@ Build-And-Run "test_signal_control_comparison" @(
 Build-And-Run "test_performance" @(
     "src/config.cpp", "src/event_logger.cpp", "src/signal_controller.cpp",
     "src/simulation_engine.cpp", "src/vehicle_generator.cpp",
-    "src/vehicle_queue.cpp", "tests/test_performance.cpp"
+    "src/vehicle_queue.cpp", "tests/test_performance.cpp", "-lpsapi"
 )
-
 Write-Host "`nAll application, usability, performance, and unit-test checks passed." -ForegroundColor Green
