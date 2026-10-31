@@ -352,6 +352,36 @@ int runLegacyCli(int argc, char* argv[]) {
 } // namespace
 
 int main(int argc, char* argv[]) {
+    if (argc > 1) {
+        const std::string arg1(argv[1]);
+        if (arg1 == "-h" || arg1 == "--help") {
+            std::cout << "Traffic Management Simulation (TMS)\n"
+                      << "Usage:\n"
+                      << "  " << argv[0] << "                  (interactive menu mode)\n"
+                      << "  " << argv[0] << " --benchmark      (run 3,600-tick quiet benchmark)\n"
+                      << "  " << argv[0] << " --quiet [ticks]  (run quiet simulation to specified ticks, default 3600)\n";
+            return 0;
+        }
+        if (arg1 == "--benchmark" || arg1 == "-b") {
+            Config config;
+            config.durationTicks = 3600;
+            SimulationEngine engine(config);
+            engine.runConfiguredDuration(std::cout, true);
+            return 0;
+        }
+        if (arg1 == "--quiet" || arg1 == "-q") {
+            Config config;
+            int ticks = 3600;
+            if (argc > 2) {
+                ticks = std::atoi(argv[2]);
+                if (ticks < 1) ticks = 3600;
+            }
+            config.durationTicks = ticks;
+            SimulationEngine engine(config);
+            engine.runConfiguredDuration(std::cout, true);
+            return 0;
+        }
+    }
     if (argc == 1) {
         return runConfiguredMenu();
     }
