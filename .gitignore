@@ -13,3 +13,10 @@ web/dist/
 # Generated simulation exports
 report.txt
 events.csv
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Generated dashboard state
+dashboard_state.json

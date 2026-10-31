@@ -1,3 +1,4 @@
+
 name: C++ Tests
 
 'on':
@@ -8,6 +9,7 @@ name: C++ Tests
       - feature/signal-control
       - feature/emergency-priority
       - feature/robustness-memory-safety
+      - feature/simulation-engine
       - feature/performance-efficiency
   pull_request:
     branches:
@@ -17,6 +19,8 @@ jobs:
   ubuntu-tests:
     name: Build and test on Ubuntu (C++11)
     runs-on: ubuntu-latest
+    env:
+      TMS_DASHBOARD_DELAY_MS: '0'
 
     steps:
       - name: Check out repository
@@ -88,10 +92,12 @@ jobs:
           g++ -std=c++11 -Wall -Wextra -pedantic -fsanitize=address,undefined -g -Iinclude \
             src/vehicle_queue.cpp tests/test_vehicle_queue.cpp -o test_vehicle_queue_asan
           ./test_vehicle_queue_asan
+
           g++ -std=c++11 -Wall -Wextra -pedantic -fsanitize=address,undefined -g -Iinclude \
             src/signal_controller.cpp src/vehicle_queue.cpp tests/test_signal_controller.cpp \
             -o test_signal_controller_asan
           ./test_signal_controller_asan
+
           g++ -std=c++11 -Wall -Wextra -pedantic -fsanitize=address,undefined -g -Iinclude \
             src/emergency_handler.cpp src/signal_controller.cpp src/vehicle_queue.cpp \
             tests/test_emergency_handler.cpp -o test_emergency_handler_asan
@@ -100,6 +106,9 @@ jobs:
   windows-mingw-build:
     name: Build with Windows MinGW-w64
     runs-on: windows-latest
+    env:
+      TMS_DASHBOARD_DELAY_MS: '0'
+
     defaults:
       run:
         shell: msys2 {0}
@@ -118,17 +127,21 @@ jobs:
       - name: Build app and statistics test, then check the summary flow
         run: |
           g++ --version
+
           g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
             src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
             src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
             src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp \
             -o traffic_sim.exe
+
           printf '3\n0\n' | ./traffic_sim.exe > smoke-output.txt
           grep -q '=== Simulation Summary ===' smoke-output.txt
+
           g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
             src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
             src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
             tests/test_simulation_engine.cpp -o test_simulation_engine.exe
+
           ./test_simulation_engine.exe
           g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
             src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
