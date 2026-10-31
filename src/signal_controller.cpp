@@ -313,22 +313,31 @@ SignalStateRecord SignalController::getStateRecord() const {
 }
 
 bool SignalController::acceptPreemption(Phase phase) {
+    const bool newRequest = !preemptionActive || preemptedPhase != phase;
     preemptedPhase = phase;
     preemptionActive = true;
 
-    // Safe transition coordination (FR-29, BR-03, SAD Section 553):
-    // If the opposite phase is currently GREEN:
-    // That green must continue until Gmin ticks have passed before transitioning to yellow.
-    if ((phase == Phase::EW && currentState == SignalState::NS_Green) ||
-        (phase == Phase::NS && currentState == SignalState::EW_Green)) {
-        if (ticksInCurrentState < activeTimings.gmin) {
-            ticksRemaining = activeTimings.gmin - ticksInCurrentState + 1;
-        } else {
-            ticksRemaining = 1;
-        }
+    if (!newRequest) {
+        return false;
     }
-    // If opposite phase is already in YELLOW or All-Red, let those complete their normal durations.
-    return true;
+
+    const bool opposingGreen =
+        (currentState == SignalState::NS_Green && phase == Phase::EW) ||
+        (currentState == SignalState::EW_Green && phase == Phase::NS);
+    if (!opposingGreen) {
+        return false;
+    }
+
+    // Keep the configured minimum green before shortening for an opposing emergency.
+    const int effectiveElapsed = ticksInCurrentState > 0 ? ticksInCurrentState : 1;
+    const int safeRemaining = effectiveElapsed < activeTimings.gmin
+        ? activeTimings.gmin - effectiveElapsed + 1
+        : 1;
+    if (safeRemaining < ticksRemaining) {
+        ticksRemaining = safeRemaining;
+        return true;
+    }
+    return false;
 }
 
 void SignalController::releasePreemption() {

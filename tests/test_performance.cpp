@@ -19,10 +19,14 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <psapi.h>
+
 static std::size_t getPeakMemoryBytes() {
-    PROCESS_MEMORY_COUNTERS pmc;
-    if (K32GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc))) {
-        return pmc.PeakWorkingSetSize;
+    PROCESS_MEMORY_COUNTERS pmc = {};
+    if (GetProcessMemoryInfo(
+            GetCurrentProcess(),
+            &pmc,
+            sizeof(pmc))) {
+        return static_cast<std::size_t>(pmc.PeakWorkingSetSize);
     }
     return 0;
 }

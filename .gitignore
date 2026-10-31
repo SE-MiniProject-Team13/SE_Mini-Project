@@ -1,11 +1,14 @@
-
-# Compiled Windows executables
+# Compiled Windows executables and C++ build output
 *.exe
-.codex-build/
-
-# Object files
 *.o
 *.obj
+.codex-build/
+
+# Web dashboard dependencies and builds
+node_modules/
+web/node_modules/
+web/dist/
+*.tsbuildinfo
 
 # Generated simulation exports
 report.txt
