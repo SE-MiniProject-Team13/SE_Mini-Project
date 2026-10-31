@@ -25,11 +25,16 @@ TrafficSimulation::TrafficSimulation(const SimulationConfig& simulationConfig)
       totalWaitingTime(0),
       totalEmergencyWaitingTime(0),
       emergencyServedCount(0),
+      maximumWaitingTime(0),
+      maximumEmergencyWaitingTime(0),
+      maximumQueueLength(0),
+      preemptionCount(0),
       previousPreemptionActive(false),
       previousPreemptionPhase(-1) {
     if (config.maxTicks < 0) {
         config.maxTicks = 0;
     }
+    recordSnapshot();
 }
 
 TrafficSimulation::~TrafficSimulation() {
@@ -68,8 +73,24 @@ bool TrafficSimulation::addVehicle(Direction direction, bool emergency) {
 
     if (!queueFor(direction).enqueue(vehicle)) {
         ++blockedCount;
+        recordAnalyticsEvent("REJECTION", *vehicle, -1);
         delete vehicle;
         return false;
+    }
+
+    recordAnalyticsEvent("ARRIVAL", *vehicle, -1);
+    if (queueFor(direction).size() > maximumQueueLength) {
+        maximumQueueLength = queueFor(direction).size();
+    }
+    if (!analyticsHistory.empty() &&
+        analyticsHistory.back().tick == currentTick) {
+        SimulationSnapshot& snapshot = analyticsHistory.back();
+        switch (direction) {
+            case Direction::North: snapshot.queues.north = northQueue.size(); break;
+            case Direction::South: snapshot.queues.south = southQueue.size(); break;
+            case Direction::East: snapshot.queues.east = eastQueue.size(); break;
+            case Direction::West: snapshot.queues.west = westQueue.size(); break;
+        }
     }
 
     if (emergency) {
@@ -87,6 +108,45 @@ bool TrafficSimulation::addVehicle(Direction direction, bool emergency) {
     }
 
     return true;
+}
+
+void TrafficSimulation::recordAnalyticsEvent(
+    const char* type,
+    const Vehicle& vehicle,
+    int waitingTime
+) {
+    SimulationEvent event;
+    event.tick = currentTick;
+    event.vehicleId = vehicle.id;
+    event.type = type;
+    event.direction = vehicle.direction;
+    event.emergency = vehicle.isEmergency;
+    event.waitingTime = waitingTime;
+    analyticsEvents.push_back(event);
+}
+
+void TrafficSimulation::recordSnapshot() {
+    SimulationSnapshot snapshot;
+    snapshot.tick = currentTick;
+    snapshot.signalState = signal.getState();
+    snapshot.queues = QueueLengths(
+        northQueue.size(),
+        southQueue.size(),
+        eastQueue.size(),
+        westQueue.size()
+    );
+    snapshot.preemptionActive = signal.isPreemptionActive();
+    analyticsHistory.push_back(snapshot);
+
+    const std::size_t queueSizes[4] = {
+        snapshot.queues.north, snapshot.queues.south,
+        snapshot.queues.east, snapshot.queues.west
+    };
+    for (int i = 0; i < 4; ++i) {
+        if (queueSizes[i] > maximumQueueLength) {
+            maximumQueueLength = queueSizes[i];
+        }
+    }
 }
 
 bool TrafficSimulation::emergencyWaitingForPhase(int phase) const {
@@ -126,7 +186,23 @@ void TrafficSimulation::detectAndRequestEmergency() {
     if (selected != nullptr) {
         Phase phase = (selected->direction == Direction::North || selected->direction == Direction::South)
                           ? Phase::NS : Phase::EW;
-        signal.acceptPreemption(phase);
+        if (signal.acceptPreemption(phase)) {
+            ++preemptionCount;
+            std::ostringstream message;
+            message << "tick=" << currentTick
+                    << " EMERGENCY_PREEMPTION approach="
+                    << (phase == Phase::NS ? "North-South" : "East-West");
+            eventLog.push_back(message.str());
+
+            SimulationEvent event;
+            event.tick = currentTick;
+            event.vehicleId = selected->id;
+            event.type = "PREEMPTION";
+            event.direction = selected->direction;
+            event.emergency = true;
+            event.waitingTime = -1;
+            analyticsEvents.push_back(event);
+        }
     } else if (signal.isPreemptionActive()) {
         signal.releasePreemption();
     }
@@ -148,12 +224,21 @@ void TrafficSimulation::dischargeGreenApproaches() {
                 Vehicle* vehicle = departed[j];
                 totalWaitingTime += vehicle->waitingTime;
                 ++servedCount;
+                if (static_cast<std::size_t>(vehicle->waitingTime) > maximumWaitingTime) {
+                    maximumWaitingTime = static_cast<std::size_t>(vehicle->waitingTime);
+                }
 
                 if (vehicle->isEmergency) {
                     totalEmergencyWaitingTime += vehicle->waitingTime;
                     ++emergencyServedCount;
+                    if (static_cast<std::size_t>(vehicle->waitingTime) >
+                        maximumEmergencyWaitingTime) {
+                        maximumEmergencyWaitingTime =
+                            static_cast<std::size_t>(vehicle->waitingTime);
+                    }
                 }
 
+                recordAnalyticsEvent("DEPARTURE", *vehicle, vehicle->waitingTime);
                 std::ostringstream message;
                 message << "tick=" << currentTick
                         << " VEHICLE_DEPARTURE id=" << vehicle->id
@@ -225,6 +310,7 @@ void TrafficSimulation::step() {
         signal.advanceState(currentTick, qLengths);
         ++currentTick;
         recordPreemptionEvents();
+        recordSnapshot();
         return;
     }
 
@@ -243,6 +329,7 @@ void TrafficSimulation::step() {
 
     ++currentTick;
     recordPreemptionEvents();
+    recordSnapshot();
 }
 
 void TrafficSimulation::run(int ticks) {
@@ -278,9 +365,16 @@ void TrafficSimulation::reset() {
     totalWaitingTime = 0;
     totalEmergencyWaitingTime = 0;
     emergencyServedCount = 0;
+    maximumWaitingTime = 0;
+    maximumEmergencyWaitingTime = 0;
+    maximumQueueLength = 0;
+    preemptionCount = 0;
     eventLog.clear();
+    analyticsEvents.clear();
+    analyticsHistory.clear();
     previousPreemptionActive = false;
     previousPreemptionPhase = -1;
+    recordSnapshot();
 }
 
 int TrafficSimulation::getCurrentTick() const {
@@ -310,6 +404,13 @@ SimulationStats TrafficSimulation::getStats() const {
             : static_cast<double>(totalWaitingTime) /
                   static_cast<double>(servedCount);
 
+    stats.maximumWaitingTime = maximumWaitingTime;
+    stats.maximumQueueLength = maximumQueueLength;
+    stats.throughput =
+        currentTick == 0
+            ? 0.0
+            : static_cast<double>(servedCount) /
+                  static_cast<double>(currentTick);
     stats.emergencyServed = emergencyServedCount;
 
     stats.averageEmergencyWaitingTime =
@@ -318,6 +419,10 @@ SimulationStats TrafficSimulation::getStats() const {
             : static_cast<double>(totalEmergencyWaitingTime) /
                   static_cast<double>(emergencyServedCount);
 
+    stats.maximumEmergencyWaitingTime = maximumEmergencyWaitingTime;
+    stats.preemptionCount = preemptionCount;
+    stats.vehicleCountInvariantPassed = checkVehicleCountInvariant();
+    stats.signalSafetyPassed = !signal.isSafetyViolationDetected();
     stats.elapsedTicks = currentTick;
 
     return stats;
@@ -337,4 +442,12 @@ bool TrafficSimulation::checkVehicleCountInvariant() const {
 
 const std::vector<std::string>& TrafficSimulation::getEventLog() const {
     return eventLog;
+}
+
+const std::vector<SimulationEvent>& TrafficSimulation::getAnalyticsEvents() const {
+    return analyticsEvents;
+}
+
+const std::vector<SimulationSnapshot>& TrafficSimulation::getAnalyticsHistory() const {
+    return analyticsHistory;
 }

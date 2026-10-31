@@ -13,5 +13,8 @@ add_executable(traffic_sim
     src/simulation_engine.cpp
     src/vehicle_generator.cpp
     src/vehicle_queue.cpp
+    src/simulation.cpp
+    src/signal_comparison.cpp
+    src/console_menu.cpp
 )
 target_include_directories(traffic_sim PRIVATE include)

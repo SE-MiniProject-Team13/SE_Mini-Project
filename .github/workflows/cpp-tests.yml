@@ -10,6 +10,7 @@ name: C++ Tests
       - feature/emergency-priority
       - feature/robustness-memory-safety
       - feature/simulation-engine
+      - feature/performance-efficiency
   pull_request:
     branches:
       - main
@@ -31,6 +32,7 @@ jobs:
           g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
             src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
             src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp \
             -o traffic_sim
           printf '3\n0\n' | ./traffic_sim > smoke-output.txt
           grep -q '=== Simulation Summary ===' smoke-output.txt
@@ -42,6 +44,14 @@ jobs:
             src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
             tests/test_simulation_engine.cpp -o test_simulation_engine
           ./test_simulation_engine
+
+      - name: Build and run event logging and report export tests
+        run: |
+          g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
+            src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
+            src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            tests/test_event_exports.cpp -o test_event_exports
+          ./test_event_exports
 
       - name: Build and run vehicle queue tests
         run: |
@@ -68,6 +78,14 @@ jobs:
             src/emergency_handler.cpp src/signal_controller.cpp src/vehicle_queue.cpp \
             tests/test_emergency_handler.cpp -o test_emergency_handler
           ./test_emergency_handler
+
+      - name: Build and run performance and efficiency tests
+        run: |
+          g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
+            src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
+            src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            tests/test_performance.cpp -o test_performance
+          ./test_performance
 
       - name: Run critical unit tests with sanitizers
         run: |
@@ -113,6 +131,7 @@ jobs:
           g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
             src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
             src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp \
             -o traffic_sim.exe
 
           printf '3\n0\n' | ./traffic_sim.exe > smoke-output.txt
@@ -124,3 +143,13 @@ jobs:
             tests/test_simulation_engine.cpp -o test_simulation_engine.exe
 
           ./test_simulation_engine.exe
+          g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
+            src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
+            src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            tests/test_event_exports.cpp -o test_event_exports.exe
+          ./test_event_exports.exe
+          g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
+            src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
+            src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            tests/test_performance.cpp -o test_performance.exe
+          ./test_performance.exe
