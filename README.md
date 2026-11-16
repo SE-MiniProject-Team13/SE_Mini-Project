@@ -50,7 +50,16 @@ On Windows, from PowerShell at the repository root:
 powershell -ExecutionPolicy Bypass -File .\build_and_test.ps1
 ```
 
-The script builds the current application and runs the unit-test executables with MinGW g++. GitHub Actions also builds the application on Ubuntu and Windows with MinGW and runs the critical module tests on Ubuntu.
+The script builds the current application and runs all 15 C++ test executables with MinGW g++, including `tests/test_register_cases.cpp`, which automates the test-register procedures (TC-01 to TC-75). GitHub Actions runs the same suites on Ubuntu (g++ 13) and Windows MinGW-w64. It also does a `-Werror` build, AddressSanitizer/UBSan runs of the full application, and the Node API and React tests.
+
+## Project documents and reports
+
+- `Docx/`: final SRS v2.2, SAD v2.1 (PDF), Test Plan v2.2 and Test Cases v2.2. Superseded versions are in `Docx/archive/`.
+- `docs/Deviations.md`: every change from the original SRS/SAD, plus the SAD v2.2 addendum.
+- `docs/Test_Execution_Report.md`: final results for all 73 test cases.
+- `docs/Code_Coverage_Report.md`: gcov line and branch coverage.
+- `docs/test-evidence/`: raw logs of the final C++, Node and web test runs.
+- `Final_Presentation_Demonstration_SE.mp4` (Sprint 2, about 2 minutes, stored with Git LFS) and `sprint1.mp4` (Sprint 1, about 1 minute).
 
 ## Project structure
 

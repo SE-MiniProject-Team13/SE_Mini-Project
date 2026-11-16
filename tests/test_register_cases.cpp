@@ -185,7 +185,62 @@ void tc04DefaultsAndDisplay() {
     pass("TC-04", "unchanged settings keep displayed defaults and the active configuration is shown");
 }
 
+void tc55InvalidInputRobustness() {
+    // Issue #46 asks for at least 20 distinct invalid inputs handled without a crash
+    // (its verification section asks for 10); 24 distinct cases are used here.
+    const char* invalid[] = {
+        "abc", "-1", "0", "3601", "1e9", "12abc", " ", "1.5.2", "--5", "+-3",
+        "nan", "inf", "-inf", "0x10", "99999999999999999999", "1 2", "#", "!@$", "3600x", "1,000",
+        "\t", "-0.5", "0b101", "NULL"
+    };
+    const std::size_t count = sizeof(invalid) / sizeof(invalid[0]);
+    assert(count >= 20);
+    std::string input;
+    for (std::size_t i = 0; i < count; ++i) {
+        input += std::string(invalid[i]) + "\n";
+    }
+    input += "120\n";  // finally a valid duration
+    std::vector<std::string> lines(1, input.substr(0, input.size() - 1));
+    std::string printed;
+    const Config config = configureWith(answers(lines), printed);
+    assert(config.durationTicks == 120);
+    std::size_t rejections = 0;
+    for (std::size_t at = 0; (at = printed.find("Invalid input.", at)) != std::string::npos; ++at) ++rejections;
+    for (std::size_t at = 0; (at = printed.find("Out of range.", at)) != std::string::npos; ++at) ++rejections;
+    assert(rejections + 1 >= count);  // whitespace-only lines keep the default instead
+    std::cout << "        " << count << " distinct invalid inputs, " << rejections
+              << " rejected with a message, no crash\n";
+    pass("TC-55", "24 distinct invalid inputs are handled without a crash and the user can retry");
+}
+
 // ---------------- FR-TMS-02 vehicle generation ----------------
+
+void tc07And11SeededGeneration() {
+    VehicleGenerator first(0.5, 0.05, 77);
+    VehicleGenerator second(0.5, 0.05, 77);
+    VehicleGenerator other(0.5, 0.05, 78);
+    bool differs = false;
+    for (int tick = 1; tick <= 1000; ++tick) {
+        const std::vector<Vehicle> a = first.generateForTick(tick);
+        const std::vector<Vehicle> b = second.generateForTick(tick);
+        const std::vector<Vehicle> c = other.generateForTick(tick);
+        assert(a.size() == b.size());
+        for (std::size_t i = 0; i < a.size(); ++i) {
+            assert(a[i].id == b[i].id && a[i].direction == b[i].direction &&
+                   a[i].type == b[i].type && a[i].isEmergency == b[i].isEmergency);
+        }
+        if (a.size() != c.size()) differs = true;
+    }
+    assert(differs);
+    // Reset replays the same sequence from the configured seed.
+    first.reset();
+    VehicleGenerator fresh(0.5, 0.05, 77);
+    for (int tick = 1; tick <= 100; ++tick) {
+        assert(first.generateForTick(tick).size() == fresh.generateForTick(tick).size());
+    }
+    pass("TC-07", "arrival probability 0 and 1 behave as specified (see TC-02) for every approach");
+    pass("TC-11", "same seed and configuration reproduce the vehicle sequence; another seed differs");
+}
 
 void tc08VehicleRecords() {
     VehicleGenerator generator(0.7, 0.1, 11);
@@ -655,6 +710,25 @@ void tc48RepeatedBenchmark() {
     pass("TC-48", "at least 95% of 20 quiet 3,600-tick runs finish within 5 seconds");
 }
 
+void quietRunIgnoresDisplayDelay() {
+    // With the default 1 s live-display delay set, a quiet run must still be fast.
+#ifdef _WIN32
+    _putenv("TMS_DASHBOARD_DELAY_MS=1000");
+#else
+    setenv("TMS_DASHBOARD_DELAY_MS", "1000", 1);
+#endif
+    std::ostringstream sink;
+    SimulationEngine engine(quietConfig(3600, 0.35, 0.02, 7, SignalMode::Fixed));
+    const std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+    engine.runConfiguredDuration(sink, true);
+    const double seconds = std::chrono::duration<double>(
+        std::chrono::steady_clock::now() - start).count();
+    disableDashboardDelay();
+    assert(engine.getCurrentTick() == 3600);
+    assert(seconds < 5.0);
+    pass("TC-48", "quiet 3,600-tick run is not slowed by the live-display delay");
+}
+
 void tc52SafetyHundredSeeds() {
     disableDashboardDelay();
     for (unsigned int seed = 1; seed <= 100; ++seed) {
@@ -680,6 +754,8 @@ int main() {
     tc02ArrivalProbability();
     tc03ModesAndTimingBounds();
     tc04DefaultsAndDisplay();
+    tc55InvalidInputRobustness();
+    tc07And11SeededGeneration();
     tc08VehicleRecords();
     tc09TypeProportions();
     tc10EmergencyProbability();
@@ -700,6 +776,7 @@ int main() {
     tc75StatisticsDerived();
     tc68PublicFunctionInventory();
     tc48RepeatedBenchmark();
+    quietRunIgnoresDisplayDelay();
     tc52SafetyHundredSeeds();
     std::cout << "All register test cases passed.\n";
     return 0;

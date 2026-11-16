@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <iomanip>
+#include <sstream>
 #include <stdexcept>
 #ifdef _WIN32
 #ifndef NOMINMAX
@@ -109,12 +110,15 @@ int SimulationEngine::advanceOneTick(std::ostream& output, bool quiet) {
     const std::vector<EmergencyEvent>& preemptionEvents = emergencyHandler->getEvents();
     for (std::vector<EmergencyEvent>::const_iterator event = preemptionEvents.begin();
          event != preemptionEvents.end(); ++event) {
+        // Logged as a signal event (no vehicle columns); the vehicle and approach that
+        // triggered the pre-emption are named in the details.
         const bool started = event->type == EmergencyEventType::EmergencyStart;
-        eventLogger.record(nextTick, SimulationEventType::SignalPhaseChange, event->vehicleId,
-                           VehicleType::Car, event->approach,
-                           std::string(started ? "Emergency pre-emption started for "
-                                               : "Emergency pre-emption ended for ") +
-                               (event->phase == Phase::NS ? "NS" : "EW") + " phase");
+        std::ostringstream details;
+        details << (started ? "Emergency pre-emption started for " : "Emergency pre-emption ended for ")
+                << (event->phase == Phase::NS ? "NS" : "EW") << " phase (vehicle #"
+                << event->vehicleId << " from " << directionToString(event->approach) << ")";
+        eventLogger.record(nextTick, SimulationEventType::SignalPhaseChange, -1,
+                           VehicleType::Car, Direction::North, details.str());
     }
     emergencyHandler->clearEvents();
     preemptionCount = static_cast<int>(emergencyHandler->getStats().preemptionCount);
@@ -246,8 +250,9 @@ void SimulationEngine::advanceTicks(int count, std::ostream& output, bool quiet)
             output.flush();
         }
 
-        // Platform-independent delay.
-        if (delayMs > 0) {
+        // Platform-independent delay so the live display can be followed.
+        // Quiet mode shows nothing per tick, so it runs at full speed (NFR-TMS-01).
+        if (!quiet && delayMs > 0) {
 #ifdef _WIN32
             Sleep(static_cast<DWORD>(delayMs));
 #else
