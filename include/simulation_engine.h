@@ -2,6 +2,7 @@
 #define SIMULATION_ENGINE_H
 
 #include "config.h"
+#include "emergency_handler.h"
 #include "event_logger.h"
 #include "signal_controller.h"
 #include "vehicle_generator.h"
@@ -18,6 +19,8 @@ private:
     std::array<std::unique_ptr<VehicleQueue>, 4> queues;
     VehicleGenerator generator;
     SignalController signalController;
+    // Emergency priority and safe pre-emption (FR-TMS-05), run in step 2 of each tick.
+    std::unique_ptr<EmergencyHandler> emergencyHandler;
     EventLogger eventLogger;
     int currentTick;
     long long totalGenerated;
@@ -56,6 +59,9 @@ public:
     long long getTotalGenerated() const;
     long long getTotalServed() const;
     long long getRejectedArrivals() const;
+    int getPreemptionCount() const;
+    const std::vector<LoggedSimulationEvent>& getEvents() const;
+    const SignalController& getSignalController() const;
 };
 
 #endif

@@ -31,7 +31,7 @@ function Build-And-Run([string]$name, [string[]]$sources, [bool]$run = $true) {
 
 $applicationSources = @(
     "src/main.cpp", "src/config.cpp", "src/event_logger.cpp",
-    "src/signal_controller.cpp", "src/simulation_engine.cpp",
+    "src/signal_controller.cpp", "src/emergency_handler.cpp", "src/simulation_engine.cpp",
     "src/vehicle_generator.cpp", "src/vehicle_queue.cpp",
     "src/simulation.cpp", "src/signal_comparison.cpp", "src/console_menu.cpp"
 )
@@ -98,7 +98,7 @@ finally {
 # Current application statistics and error behavior.
 Build-And-Run "test_simulation_engine" @(
     "src/config.cpp", "src/event_logger.cpp", "src/signal_controller.cpp",
-    "src/simulation_engine.cpp", "src/vehicle_generator.cpp",
+    "src/emergency_handler.cpp", "src/simulation_engine.cpp", "src/vehicle_generator.cpp",
     "src/vehicle_queue.cpp", "tests/test_simulation_engine.cpp"
 )
 
@@ -106,7 +106,7 @@ Build-And-Run "test_simulation_engine" @(
 Build-And-Run "test_vehicle_queue" @("src/vehicle_queue.cpp", "tests/test_vehicle_queue.cpp")
 Build-And-Run "test_event_exports" @(
     "src/config.cpp", "src/event_logger.cpp", "src/signal_controller.cpp",
-    "src/simulation_engine.cpp", "src/vehicle_generator.cpp",
+    "src/emergency_handler.cpp", "src/simulation_engine.cpp", "src/vehicle_generator.cpp",
     "src/vehicle_queue.cpp", "tests/test_event_exports.cpp"
 )
 Build-And-Run "test_signal_controller" @("src/signal_controller.cpp", "src/vehicle_queue.cpp", "tests/test_signal_controller.cpp")
@@ -129,7 +129,14 @@ Build-And-Run "test_signal_control_comparison" @(
 # Performance and efficiency tests (NFR-TMS-01 / TC-48 to TC-51)
 Build-And-Run "test_performance" @(
     "src/config.cpp", "src/event_logger.cpp", "src/signal_controller.cpp",
-    "src/simulation_engine.cpp", "src/vehicle_generator.cpp",
+    "src/emergency_handler.cpp", "src/simulation_engine.cpp", "src/vehicle_generator.cpp",
     "src/vehicle_queue.cpp", "tests/test_performance.cpp", "-lpsapi"
+)
+
+# Test-register procedures for cases previously recorded as Not Run / Blocked.
+Build-And-Run "test_register_cases" @(
+    "src/config.cpp", "src/event_logger.cpp", "src/signal_controller.cpp",
+    "src/emergency_handler.cpp", "src/simulation_engine.cpp", "src/vehicle_generator.cpp",
+    "src/vehicle_queue.cpp", "tests/test_register_cases.cpp"
 )
 Write-Host "`nAll application, usability, performance, and unit-test checks passed." -ForegroundColor Green

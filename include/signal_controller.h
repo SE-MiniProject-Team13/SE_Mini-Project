@@ -30,12 +30,13 @@ enum class Phase {
 };
 
 struct SignalTimings {
-    static const int ALL_RED_TICKS = 1; // SRS FR-21: fixed one-tick All-Red interval
+    static const int ALL_RED_TICKS = 1;     // Default All-Red interval (issue #45: at least one tick)
+    static const int MAX_ALL_RED_TICKS = 5; // Upper bound accepted by the console (issue #39)
 
     SignalMode mode;
     int greenTime;       // Base green time in ticks (default 10, range 1..60)
     int yellowTime;      // Yellow time in ticks (default 2, range 1..9)
-    int allRedTime;      // Fixed 1 tick per FR-21 (not user-configurable)
+    int allRedTime;      // All-Red ticks (default 1, range 1..5; out-of-range values fall back to 1)
     int gmin;            // Minimum green time (default 5)
     int gmax;            // Maximum green time (default 30)
     int dischargeRate;   // Vehicles per tick on green (default 1, range 1..5)
@@ -46,12 +47,13 @@ struct SignalTimings {
         int yellow = 2,
         int minG = 5,
         int maxG = 30,
-        int discharge = 1
+        int discharge = 1,
+        int allRed = ALL_RED_TICKS
     )
         : mode(m),
           greenTime(green),
           yellowTime(yellow),
-          allRedTime(ALL_RED_TICKS),
+          allRedTime(allRed),
           gmin(minG),
           gmax(maxG),
           dischargeRate(discharge) {}

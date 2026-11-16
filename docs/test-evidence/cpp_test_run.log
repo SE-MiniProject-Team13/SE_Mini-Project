@@ -1,0 +1,307 @@
+﻿Local C++ test run - 2026-11-16 23:36 - g++.exe (MinGW.org GCC-6.3.0-1) 6.3.0
+
+[BUILDING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\traffic_sim.exe...
+[SUCCESS] Built C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\traffic_sim.exe
+[PASS] Application menu starts and exits successfully.
+
+[BUILDING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_simulation_engine.exe...
+[SUCCESS] Built C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_simulation_engine.exe
+[RUNNING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_simulation_engine.exe...
+All simulation engine usability/statistics tests passed.
+[PASS] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_simulation_engine.exe
+
+[BUILDING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_vehicle_queue.exe...
+[SUCCESS] Built C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_vehicle_queue.exe
+[RUNNING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_vehicle_queue.exe...
+All 10 vehicle queue tests passed.
+[PASS] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_vehicle_queue.exe
+
+[BUILDING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_event_exports.exe...
+[SUCCESS] Built C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_event_exports.exe
+[RUNNING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_event_exports.exe...
+All event logging and report export tests passed.
+[PASS] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_event_exports.exe
+
+[BUILDING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_signal_controller.exe...
+[SUCCESS] Built C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_signal_controller.exe
+[RUNNING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_signal_controller.exe...
+Running Signal Controller Unit Tests...
+[PASS] testSixStateCycle
+[PASS] testFixedModeDurations
+[PASS] testAdaptiveTimingCalculations
+[PASS] testGminAndGmaxBounds
+[PASS] testConflictFreeSignals
+[PASS] testVehicleDischargeRules
+[PASS] testTimingChangesTakeEffectAtNextCycle
+[PASS] testStateRecordAndDisplay
+[PASS] testAdaptiveMultiCycle
+[PASS] testModeSwitching
+[PASS] testReset
+[PASS] testStaticHelpers
+[PASS] testActivePhaseMapping
+All Signal Controller tests passed successfully!
+[PASS] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_signal_controller.exe
+
+[BUILDING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_config.exe...
+[SUCCESS] Built C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_config.exe
+[RUNNING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_config.exe...
+PASS: Default configuration
+PASS: Invalid input and range validation
+PASS: Adaptive green-time validation
+PASS: Boundary values
+
+All configuration tests passed.
+[PASS] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_config.exe
+
+[BUILDING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_emergency_handler.exe...
+[SUCCESS] Built C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_emergency_handler.exe
+[RUNNING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_emergency_handler.exe...
+Running Emergency Handler Unit Tests (TC-27 to TC-33)...
+[PASS] TC-27: Emergency queue priority and FIFO order preserved
+[PASS] TC-28: Per-tick detection only triggers for front emergency on non-green approach
+[PASS] TC-29: Safe transitions through green, yellow, and all-red never skip safety states
+[PASS] TC-30: Conflict resolution prioritizes earliest arrival then lower vehicle ID
+[PASS] TC-31: Pre-emption ends at max duration (15 ticks) and safely resumes normal cycle
+[PASS] TC-32: EMERGENCY_START and EMERGENCY_END events recorded with tick and approach
+[PASS] TC-33: Emergency waiting time recorded and reported separately from normal vehicles
+All Emergency Handler tests (TC-27 to TC-33) passed successfully!
+[PASS] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_emergency_handler.exe
+
+[BUILDING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_simulation.exe...
+[SUCCESS] Built C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_simulation.exe
+[RUNNING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_simulation.exe...
+All simulation tests passed.
+[PASS] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_simulation.exe
+
+[BUILDING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_emergency_preemption.exe...
+[SUCCESS] Built C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_emergency_preemption.exe
+[RUNNING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_emergency_preemption.exe...
+Emergency pre-emption tests passed.
+[PASS] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_emergency_preemption.exe
+
+[BUILDING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_final_requirements.exe...
+[SUCCESS] Built C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_final_requirements.exe
+[RUNNING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_final_requirements.exe...
+Final requirement tests passed.
+[PASS] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_final_requirements.exe
+
+[BUILDING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_signal_transition_safety.exe...
+[SUCCESS] Built C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_signal_transition_safety.exe
+[RUNNING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_signal_transition_safety.exe...
+Normal signal transitions: passed
+Emergency pre-emption transitions: passed
+
+All signal transition safety tests passed.
+[PASS] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_signal_transition_safety.exe
+
+[BUILDING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_randomized_safety.exe...
+[SUCCESS] Built C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_randomized_safety.exe
+[RUNNING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_randomized_safety.exe...
+Seed 0 passed
+Seed 1 passed
+Seed 2 passed
+Seed 3 passed
+Seed 4 passed
+Seed 5 passed
+Seed 6 passed
+Seed 7 passed
+Seed 8 passed
+Seed 9 passed
+Seed 10 passed
+Seed 11 passed
+Seed 12 passed
+Seed 13 passed
+Seed 14 passed
+Seed 15 passed
+Seed 16 passed
+Seed 17 passed
+Seed 18 passed
+Seed 19 passed
+Seed 20 passed
+Seed 21 passed
+Seed 22 passed
+Seed 23 passed
+Seed 24 passed
+Seed 25 passed
+Seed 26 passed
+Seed 27 passed
+Seed 28 passed
+Seed 29 passed
+Seed 30 passed
+Seed 31 passed
+Seed 32 passed
+Seed 33 passed
+Seed 34 passed
+Seed 35 passed
+Seed 36 passed
+Seed 37 passed
+Seed 38 passed
+Seed 39 passed
+Seed 40 passed
+Seed 41 passed
+Seed 42 passed
+Seed 43 passed
+Seed 44 passed
+Seed 45 passed
+Seed 46 passed
+Seed 47 passed
+Seed 48 passed
+Seed 49 passed
+Seed 50 passed
+Seed 51 passed
+Seed 52 passed
+Seed 53 passed
+Seed 54 passed
+Seed 55 passed
+Seed 56 passed
+Seed 57 passed
+Seed 58 passed
+Seed 59 passed
+Seed 60 passed
+Seed 61 passed
+Seed 62 passed
+Seed 63 passed
+Seed 64 passed
+Seed 65 passed
+Seed 66 passed
+Seed 67 passed
+Seed 68 passed
+Seed 69 passed
+Seed 70 passed
+Seed 71 passed
+Seed 72 passed
+Seed 73 passed
+Seed 74 passed
+Seed 75 passed
+Seed 76 passed
+Seed 77 passed
+Seed 78 passed
+Seed 79 passed
+Seed 80 passed
+Seed 81 passed
+Seed 82 passed
+Seed 83 passed
+Seed 84 passed
+Seed 85 passed
+Seed 86 passed
+Seed 87 passed
+Seed 88 passed
+Seed 89 passed
+Seed 90 passed
+Seed 91 passed
+Seed 92 passed
+Seed 93 passed
+Seed 94 passed
+Seed 95 passed
+Seed 96 passed
+Seed 97 passed
+Seed 98 passed
+Seed 99 passed
+
+All 100 randomized simulation runs passed.
+[PASS] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_randomized_safety.exe
+
+[BUILDING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_simulation_analytics.exe...
+[SUCCESS] Built C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_simulation_analytics.exe
+[RUNNING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_simulation_analytics.exe...
+Simulation analytics tests passed.
+[PASS] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_simulation_analytics.exe
+
+[BUILDING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_signal_control_comparison.exe...
+[SUCCESS] Built C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_signal_control_comparison.exe
+[RUNNING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_signal_control_comparison.exe...
+Fixed vs adaptive comparison tests passed.
+[PASS] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_signal_control_comparison.exe
+
+[BUILDING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_performance.exe...
+[SUCCESS] Built C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_performance.exe
+[RUNNING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_performance.exe...
+=================================================================
+   NFR-TMS-01: Performance and Efficiency Automated Test Suite   
+=================================================================
+
+[TEST 1] TC-48 (NFR-01): 3,600-tick Quiet-Mode Benchmark
+Target: Finish within 5.0 seconds for >= 95% of runs.
+  Iterations:       20
+  Min duration:     1.2598 s
+  Max duration:     2.9448 s
+  Average duration: 2.0824 s
+  95th percentile:  2.9031 s
+  Runs under 5.0s:  20 / 20 (100.0000%)
+  -> PASS: 3,600-tick quiet simulation completed in < 5 seconds.
+
+[TEST 2] TC-50 (NFR-03): Memory Consumption with up to 10,000 Vehicles
+Target: Memory consumption remains below 100 MB.
+  Note: Memory tracked via OS process peak working set (K32GetProcessMemoryInfo on Windows / getrusage on Linux).
+  This metric represents the process high-water mark across all operations.
+  Sub-test 2A: Enqueuing 10,000 vehicles into VehicleQueue (static capacity test)...
+  Queue Peak Working Set Memory: 7.2891 MB
+  Sub-test 2B: Running SimulationEngine to process > 10,000 vehicles (dynamic workload)...
+  Vehicles Processed: 10443 generated, 10398 served
+  Simulation Peak Working Set Memory: 8.1523 MB
+  -> PASS: Peak memory remains strictly below 100 MB threshold across both tests.
+
+[TEST 3] TC-49 (NFR-02): Queue Operations O(1) Complexity
+Target: Enqueue, dequeue, front, size execute in constant O(1) time.
+  (Code inspection verified: Linked list head/tail pointers eliminate queue traversals)
+  N =   100 | Enqueue:     0.0 ns/op | Dequeue:     0.0 ns/op | Peek/Size:    0.0 ns/op
+  N =  1000 | Enqueue:     0.0 ns/op | Dequeue:     0.0 ns/op | Peek/Size:    0.0 ns/op
+  N = 10000 | Enqueue:     0.0 ns/op | Dequeue:     0.0 ns/op | Peek/Size:    0.0 ns/op
+  -> PASS: Queue operations demonstrate constant O(1) time complexity.
+
+[TEST 4] TC-51 (NFR-04): Console Menu Operations Responsiveness
+Target: Each menu selection receives a response within 1 second.
+  (Measures engine dispatch and processing latency once option is selected)
+  Menu Option 5 (Reset simulation):    0.0 ms (limit: 1000 ms)
+  Menu Option 2 (Step 1 tick dispatch): 0.0 ms (limit: 1000 ms)
+  Menu Option 3 (Quiet run to end):    174.6 ms (limit: 1000 ms)
+  Menu Option 6a (Export report.txt):   79.7 ms (limit: 1000 ms)
+  Menu Option 6b (Export events.csv):   0.0 ms (limit: 1000 ms)
+  -> PASS: All menu operations respond well within the 1-second threshold.
+
+=================================================================
+   ALL NFR-TMS-01 PERFORMANCE & EFFICIENCY TESTS PASSED!         
+=================================================================
+[PASS] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_performance.exe
+
+[BUILDING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_register_cases.exe...
+[SUCCESS] Built C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_register_cases.exe
+[RUNNING] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_register_cases.exe...
+[PASS] TC-01: duration accepts 1 and 3600, rejects 0, 3601 and text with the allowed range
+[PASS] TC-02: probability 0 gives no arrivals, 1 gives one arrival per approach per tick
+[PASS] TC-03: Fixed/Adaptive and every timing, capacity and seed bound validated, invalid values retried
+[PASS] TC-04: unchanged settings keep displayed defaults and the active configuration is shown
+        24 distinct invalid inputs, 24 rejected with a message, no crash
+[PASS] TC-55: 24 distinct invalid inputs are handled without a crash and the user can retry
+[PASS] TC-07: arrival probability 0 and 1 behave as specified (see TC-02) for every approach
+[PASS] TC-11: same seed and configuration reproduce the vehicle sequence; another seed differs
+[PASS] TC-08: unique sequential IDs, valid approach and type, correct arrival tick
+        sample=100000 seed=2026 Car=59773 Bike=25377 Bus=8066 Truck=6784
+[PASS] TC-09: Car/Bike/Bus/Truck within 1 percentage point of 60/25/8/7
+[PASS] TC-10: emergency probability 0 -> none, 1 -> all, 0.2 within 1 percentage point
+[PASS] TC-12: four queues hold their own vehicles; operations on one do not change another
+[PASS] TC-16: departure tick recorded and waiting time = departure - arrival
+[PASS] TC-17: vehicles freed on departure, clear/reset and destruction (ASan-checked in CI)
+[PASS] TC-18: current length of all four approaches reaches display and statistics
+[PASS] TC-22: adaptive green = Gmin + ceil(waiting/2), bounded by Gmin and Gmax
+[PASS] TC-21: configured All-Red duration 1-5 is applied; out-of-range values fall back to 1 tick
+[PASS] TC-26: timing change stays pending during the cycle and applies at the next cycle start
+[PASS] TC-30: with several waiting emergencies the earliest arrival is served first
+        pre-emptions in 3600 ticks (seed 42): 128
+[PASS] FR-TMS-05: console engine runs emergency pre-emption safely and logs start/end
+[PASS] TC-34: Run executes continuously, stops at the configured duration and shows the summary
+[PASS] TC-35: Step advances exactly 1 and 100 ticks; 0 is rejected (menu rejects 0 and 101, see CLI check)
+[PASS] TC-36: each tick shows tick, signal state and remaining time, queues, pre-emption and served count
+[PASS] TC-37: every tick processes arrivals, then signal update, then service, then statistics
+[PASS] TC-40: summary average and maximum waits match the recorded arrival/departure ticks
+[PASS] TC-75: statistics equal the recorded events and cannot be edited through the interface
+[PASS] TC-68: every public queue, signal, emergency and statistics function has a unit test
+        20/20 runs under 5 s, slowest 2.91071 s
+[PASS] TC-48: at least 95% of 20 quiet 3,600-tick runs finish within 5 seconds
+[PASS] TC-48: quiet 3,600-tick run is not slowed by the live-display delay
+[PASS] TC-52: 100 seeds x 3,600 ticks (Fixed and Adaptive, with emergencies): no conflicting signals
+All register test cases passed.
+[PASS] C:\Users\Vedanta\Desktop\SE_Mini_Project\.codex-build\test_register_cases.exe
+
+All application, usability, performance, and unit-test checks passed.
+BUILD_AND_TEST_EXIT_OK=True

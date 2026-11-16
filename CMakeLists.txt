@@ -10,7 +10,7 @@ add_executable(traffic_sim
     src/config.cpp
     src/event_logger.cpp
     src/signal_controller.cpp
-    src/simulation_engine.cpp
+    src/emergency_handler.cpp src/simulation_engine.cpp
     src/vehicle_generator.cpp
     src/vehicle_queue.cpp
     src/simulation.cpp
