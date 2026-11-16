@@ -11,6 +11,7 @@ name: C++ Tests
       - feature/robustness-memory-safety
       - feature/simulation-engine
       - feature/performance-efficiency
+      - docs/final-submission
   pull_request:
     branches:
       - main
@@ -31,7 +32,7 @@ jobs:
           g++ --version
           g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
             src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
-            src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            src/emergency_handler.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
             src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp \
             -o traffic_sim
           printf '3\n0\n' | ./traffic_sim > smoke-output.txt
@@ -41,7 +42,7 @@ jobs:
         run: |
           g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
             src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
-            src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            src/emergency_handler.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
             tests/test_simulation_engine.cpp -o test_simulation_engine
           ./test_simulation_engine
 
@@ -49,7 +50,7 @@ jobs:
         run: |
           g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
             src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
-            src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            src/emergency_handler.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
             tests/test_event_exports.cpp -o test_event_exports
           ./test_event_exports
 
@@ -83,9 +84,61 @@ jobs:
         run: |
           g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
             src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
-            src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            src/emergency_handler.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
             tests/test_performance.cpp -o test_performance
           ./test_performance
+
+      - name: Build and run simulation, safety, analytics and comparison suites
+        run: |
+          SIM="src/vehicle_queue.cpp src/signal_controller.cpp src/simulation.cpp"
+          for t in test_simulation test_emergency_preemption test_final_requirements \
+                   test_signal_transition_safety test_randomized_safety test_simulation_analytics; do
+            g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude $SIM tests/$t.cpp -o $t
+            ./$t
+          done
+          g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude $SIM \
+            src/signal_comparison.cpp src/console_menu.cpp \
+            tests/test_signal_control_comparison.cpp -o test_signal_control_comparison
+          ./test_signal_control_comparison
+
+      - name: Build and run test-register cases (TC-01 to TC-75 previously Not Run)
+        run: |
+          g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
+            src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
+            src/emergency_handler.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            tests/test_register_cases.cpp -o test_register_cases
+          ./test_register_cases
+
+      - name: Step-mode menu rejects 0 and 101 (TC-35)
+        run: |
+          printf '2\n0\n101\n1\n0\n' | ./traffic_sim > step-output.txt
+          grep -c 'Enter a whole number from 1 to 100.' step-output.txt | grep -q '^2$'
+          grep -q -- '--- Tick 1 ---' step-output.txt
+
+      - name: Warning-free build of the application (TC-58, SEC-02)
+        run: |
+          g++ -std=c++11 -Wall -Wextra -pedantic -Werror -Iinclude \
+            src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
+            src/emergency_handler.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp \
+            -o traffic_sim_werror
+
+      - name: Run full application scenario under AddressSanitizer (TC-17, TC-56, TC-58)
+        run: |
+          g++ -std=c++11 -Wall -Wextra -pedantic -fsanitize=address,undefined -fno-sanitize-recover=all -g -Iinclude \
+            src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
+            src/emergency_handler.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp \
+            -o traffic_sim_asan
+          # Quiet run, step 100, reset, quiet run again, compare modes, export, exit.
+          printf '3\n2\n100\n6\n3\n5\n7\n0\n' | ./traffic_sim_asan > asan-output.txt
+          grep -q '=== Simulation Summary ===' asan-output.txt
+
+          g++ -std=c++11 -Wall -Wextra -pedantic -fsanitize=address,undefined -fno-sanitize-recover=all -g -Iinclude \
+            src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
+            src/emergency_handler.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            tests/test_register_cases.cpp -o test_register_cases_asan
+          ./test_register_cases_asan
 
       - name: Run critical unit tests with sanitizers
         run: |
@@ -130,7 +183,7 @@ jobs:
 
           g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
             src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
-            src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            src/emergency_handler.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
             src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp \
             -o traffic_sim.exe
 
@@ -139,17 +192,42 @@ jobs:
 
           g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
             src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
-            src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            src/emergency_handler.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
             tests/test_simulation_engine.cpp -o test_simulation_engine.exe
 
           ./test_simulation_engine.exe
           g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
             src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
-            src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            src/emergency_handler.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
             tests/test_event_exports.cpp -o test_event_exports.exe
           ./test_event_exports.exe
           g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
             src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
-            src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            src/emergency_handler.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
             tests/test_performance.cpp -o test_performance.exe
           ./test_performance.exe
+          g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude \
+            src/config.cpp src/event_logger.cpp src/signal_controller.cpp \
+            src/emergency_handler.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp \
+            tests/test_register_cases.cpp -o test_register_cases.exe
+          ./test_register_cases.exe
+
+  node-dashboard-tests:
+    name: Dashboard API and web tests (TC-77 to TC-80)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run API and web tests
+        run: npm test
