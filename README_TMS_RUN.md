@@ -6,14 +6,14 @@ The current application is a C++11 console program. Use g++ 9 or later from the 
 
 ```powershell
 # Build the main simulation application
-g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp -o traffic_sim.exe
+g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp src/emergency_handler.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp -o traffic_sim.exe
 .\traffic_sim.exe
 ```
 
 ## Ubuntu
 
 ```sh
-g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp -o traffic_sim
+g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp src/emergency_handler.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp -o traffic_sim
 ./traffic_sim
 ```
 
@@ -97,7 +97,7 @@ g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/emergency_handler.cpp src/s
 .\test_emergency_handler.exe
 
 # 10. Simulation Engine Tests
-g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/config.cpp src/event_logger.cpp src/signal_controller.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp tests/test_simulation_engine.cpp -o test_simulation_engine.exe
+g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/config.cpp src/event_logger.cpp src/signal_controller.cpp src/emergency_handler.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp tests/test_simulation_engine.cpp -o test_simulation_engine.exe
 .\test_simulation_engine.exe
 
 # 11. Simulation Analytics Tests

@@ -11,7 +11,8 @@ TrafficSimulation::TrafficSimulation(const SimulationConfig& simulationConfig)
           simulationConfig.yellowTicks,
           simulationConfig.minGreenTicks,
           simulationConfig.maxGreenTicks,
-          simulationConfig.dischargeRate
+          simulationConfig.dischargeRate,
+          simulationConfig.allRedTicks
       )),
       northQueue(simulationConfig.queueCapacity),
       southQueue(simulationConfig.queueCapacity),
@@ -354,7 +355,8 @@ void TrafficSimulation::reset() {
         config.yellowTicks,
         config.minGreenTicks,
         config.maxGreenTicks,
-        config.dischargeRate
+        config.dischargeRate,
+        config.allRedTicks
     ));
 
     currentTick = 0;

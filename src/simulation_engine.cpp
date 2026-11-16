@@ -26,7 +26,8 @@ SignalTimings SimulationEngine::makeSignalTimings(const Config& config) {
         config.yellowTicks,
         config.adaptiveMinGreen,
         config.adaptiveMaxGreen,
-        1
+        1,
+        config.allRedTicks
     );
 }
 
@@ -61,6 +62,10 @@ SimulationEngine::SimulationEngine(const Config& simulationConfig)
         queues[index].reset(new VehicleQueue(static_cast<std::size_t>(config.queueCapacity)));
         maximumQueueLengths[index] = 0;
     }
+    emergencyHandler.reset(new EmergencyHandler(
+        signalController,
+        ApproachQueues(*queues[0], *queues[1], *queues[2], *queues[3])
+    ));
     writeDashboardSnapshot();
 }
 
@@ -99,6 +104,22 @@ int SimulationEngine::advanceOneTick(std::ostream& output, bool quiet) {
         }
     }
 
+    // Step 2a: emergency detection and safe pre-emption before the signal update (SAD 4.1).
+    emergencyHandler->processTick(nextTick);
+    const std::vector<EmergencyEvent>& preemptionEvents = emergencyHandler->getEvents();
+    for (std::vector<EmergencyEvent>::const_iterator event = preemptionEvents.begin();
+         event != preemptionEvents.end(); ++event) {
+        const bool started = event->type == EmergencyEventType::EmergencyStart;
+        eventLogger.record(nextTick, SimulationEventType::SignalPhaseChange, event->vehicleId,
+                           VehicleType::Car, event->approach,
+                           std::string(started ? "Emergency pre-emption started for "
+                                               : "Emergency pre-emption ended for ") +
+                               (event->phase == Phase::NS ? "NS" : "EW") + " phase");
+    }
+    emergencyHandler->clearEvents();
+    preemptionCount = static_cast<int>(emergencyHandler->getStats().preemptionCount);
+
+    // Step 2b: signal update.
     const SignalState previousState = signalController.getState();
     signalController.advanceState(nextTick, getQueueLengths());
     const SignalState updatedState = signalController.getState();
@@ -182,6 +203,11 @@ void SimulationEngine::displayTick(
            << " S=" << queues[1]->size()
            << " E=" << queues[2]->size()
            << " W=" << queues[3]->size() << '\n';
+    output << "Emergency pre-emption: "
+           << (emergencyHandler->isPreemptionActive()
+                   ? (emergencyHandler->getCurrentRequest().phase == Phase::NS ? "ACTIVE (NS)" : "ACTIVE (EW)")
+                   : "none")
+           << '\n';
     output << "Vehicles served this tick: " << servedThisTick
            << " | total served: " << totalServed << '\n';
 }
@@ -314,6 +340,7 @@ void SimulationEngine::reset() {
     generator.reset();
     eventLogger.clear();
     signalController.reset();
+    emergencyHandler->reset();
     currentTick = 0;
     totalGenerated = 0;
     emergencyGenerated = 0;
@@ -375,3 +402,8 @@ int SimulationEngine::getCurrentTick() const { return currentTick; }
 long long SimulationEngine::getTotalGenerated() const { return totalGenerated; }
 long long SimulationEngine::getTotalServed() const { return totalServed; }
 long long SimulationEngine::getRejectedArrivals() const { return rejectedArrivals; }
+int SimulationEngine::getPreemptionCount() const { return preemptionCount; }
+const std::vector<LoggedSimulationEvent>& SimulationEngine::getEvents() const {
+    return eventLogger.getEvents();
+}
+const SignalController& SimulationEngine::getSignalController() const { return signalController; }

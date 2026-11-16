@@ -24,7 +24,7 @@ You need **g++ 9 or later**. No CMake is required for the commands below. Run th
 
 ```powershell
 g++ --version
-g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp -o traffic_sim.exe
+g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp src/emergency_handler.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp -o traffic_sim.exe
 .\traffic_sim.exe
 ```
 
@@ -32,7 +32,7 @@ g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/main.cpp src/config.cpp src
 
 ```sh
 g++ --version
-g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp -o traffic_sim
+g++ -std=c++11 -Wall -Wextra -pedantic -Iinclude src/main.cpp src/config.cpp src/event_logger.cpp src/signal_controller.cpp src/emergency_handler.cpp src/simulation_engine.cpp src/vehicle_generator.cpp src/vehicle_queue.cpp src/simulation.cpp src/signal_comparison.cpp src/console_menu.cpp -o traffic_sim
 ./traffic_sim
 ```
 

@@ -1,5 +1,16 @@
 #include "signal_controller.h"
 
+namespace {
+// Issue #39: All-Red is configurable (1-5 ticks). Issue #45: at least one tick.
+// Values outside the supported range fall back to the one-tick default.
+int sanitizeAllRed(int ticks) {
+    if (ticks < 1 || ticks > SignalTimings::MAX_ALL_RED_TICKS) {
+        return SignalTimings::ALL_RED_TICKS;
+    }
+    return ticks;
+}
+}
+
 SignalController::SignalController(const SignalTimings& timings)
     : initialTimings(timings),
       activeTimings(timings),
@@ -13,9 +24,9 @@ SignalController::SignalController(const SignalTimings& timings)
       safetyViolationDetected(false),
       isFirstTick(true),
       ticksInCurrentState(0) {
-    initialTimings.allRedTime = SignalTimings::ALL_RED_TICKS;
-    activeTimings.allRedTime = SignalTimings::ALL_RED_TICKS;
-    pendingTimings.allRedTime = SignalTimings::ALL_RED_TICKS;
+    initialTimings.allRedTime = sanitizeAllRed(initialTimings.allRedTime);
+    activeTimings.allRedTime = initialTimings.allRedTime;
+    pendingTimings.allRedTime = initialTimings.allRedTime;
     ticksRemaining = determineGreenDuration(SignalState::NS_Green, QueueLengths());
 }
 
@@ -64,7 +75,7 @@ void SignalController::transitionToNextState(const QueueLengths& queueLengths) {
 
         case SignalState::NS_Yellow:
             currentState = SignalState::All_Red_1;
-            ticksRemaining = SignalTimings::ALL_RED_TICKS;
+            ticksRemaining = activeTimings.allRedTime;
             break;
 
         case SignalState::All_Red_1:
@@ -85,7 +96,7 @@ void SignalController::transitionToNextState(const QueueLengths& queueLengths) {
 
         case SignalState::EW_Yellow:
             currentState = SignalState::All_Red_2;
-            ticksRemaining = SignalTimings::ALL_RED_TICKS;
+            ticksRemaining = activeTimings.allRedTime;
             break;
 
         case SignalState::All_Red_2:
@@ -197,7 +208,7 @@ bool SignalController::checkSafety() {
 
 void SignalController::forceAllRed() {
     currentState = SignalState::All_Red_1;
-    ticksRemaining = SignalTimings::ALL_RED_TICKS;
+    ticksRemaining = activeTimings.allRedTime;
 }
 
 bool SignalController::canDischarge(Direction approach) const {
@@ -237,8 +248,8 @@ int SignalController::dischargeVehicles(
 
 void SignalController::setTimings(const SignalTimings& newTimings) {
     SignalTimings sanitized = newTimings;
-    // SRS FR-21: The All-Red interval is strictly fixed at 1 tick and cannot be altered.
-    sanitized.allRedTime = SignalTimings::ALL_RED_TICKS;
+    // All-Red must stay within the supported 1-5 tick range (issues #39 and #45).
+    sanitized.allRedTime = sanitizeAllRed(sanitized.allRedTime);
 
     // FR-26 & SAD Section 4.3: Runtime timing changes are staged as pending
     // and applied strictly at the start of the next cycle (S6 -> S1 transition).
